@@ -1,0 +1,11 @@
+# Devpost Learn personal profile
+/devpost/learner-profile.md
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies and build
+node_modules/
+dist/

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "deluxe",
+    "name": "Deluxe Room",
+    "room_number": "204",
+    "price_per_night": 85000,
+    "currency": "NGN",
+    "capacity": 2,
+    "features": ["King bed", "City view", "Walk-in shower", "Workstation"],
+    "has_balcony": false,
+    "has_bathtub": false,
+    "quiet_tier": "Standard",
+    "description": "Refined urban sanctuary tailored for focused productivity and restorative rest. Features floor-to-ceiling city vistas, an acoustic work alcove, and a rainfall glass shower.",
+    "media": {
+      "day_overview": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1920&q=80",
+      "night_overview": "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80",
+      "bathroom_detail": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80"
+    }
+  },
+  {
+    "id": "executive-suite",
+    "name": "Executive Suite",
+    "room_number": "304",
+    "price_per_night": 145000,
+    "currency": "NGN",
+    "capacity": 2,
+    "features": ["Private sunset balcony", "Soaking tub", "Lounge", "Breakfast included"],
+    "has_balcony": true,
+    "has_bathtub": true,
+    "quiet_tier": "High",
+    "description": "A spacious retreat designed for romantic celebrations and secluded retreats. Includes a deep freestanding soaking tub, a private westward sunset balcony, and tranquil acoustic isolation.",
+    "media": {
+      "day_overview": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1920&q=80",
+      "night_overview": "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1920&q=80",
+      "bathroom_detail": "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1920&q=80",
+      "balcony_detail": "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1920&q=80"
+    }
+  },
+  {
+    "id": "presidential-suite",
+    "name": "Presidential Suite",
+    "room_number": "501",
+    "price_per_night": 280000,
+    "currency": "NGN",
+    "capacity": 4,
+    "features": ["Panoramic skyline", "Terrace plunge pool", "Marble bathroom", "24/7 butler"],
+    "has_balcony": true,
+    "has_bathtub": true,
+    "quiet_tier": "Maximum",
+    "description": "The pinnacle of Aurelia hospitality. Panoramic 270-degree skyline views, private rooftop terrace with heated plunge pool, hand-carved Calacatta marble bath, and dedicated butler service.",
+    "media": {
+      "day_overview": "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1920&q=80",
+      "night_overview": "https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=1920&q=80",
+      "bathroom_detail": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1920&q=80",
+      "balcony_detail": "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1920&q=80"
+    }
+  }
+]

@@ -1,0 +1,202 @@
+.cinematic-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--color-obsidian-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sliding Viewport Container */
+.stage-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300vw;
+  height: 100vh;
+  display: flex;
+  transition: transform var(--duration-room) var(--ease-spring);
+  will-change: transform;
+}
+
+/* Individual Room Slide */
+.room-slide {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Visual Media Container with Zoom capability */
+.slide-visual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform var(--duration-feature) var(--ease-spring);
+  will-change: transform;
+}
+
+.slide-visual.feature-zoom {
+  transform: scale(1.08) translateY(-1.5%);
+}
+
+/* Day & Night Image Layers */
+.media-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity var(--duration-ambiance) var(--ease-smooth);
+  will-change: opacity;
+}
+
+.media-layer.day-layer {
+  opacity: 1;
+}
+
+.media-layer.night-layer {
+  opacity: 0;
+}
+
+.is-night .media-layer.day-layer {
+  opacity: 0;
+}
+
+.is-night .media-layer.night-layer {
+  opacity: 1;
+}
+
+/* Cinematic Vignette & Ambient Scrim */
+.stage-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      ellipse at center,
+      rgba(11, 12, 14, 0.1) 0%,
+      rgba(11, 12, 14, 0.45) 60%,
+      rgba(8, 9, 11, 0.85) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(11, 12, 14, 0.5) 0%,
+      transparent 20%,
+      transparent 70%,
+      rgba(8, 9, 11, 0.8) 100%
+    );
+  z-index: 2;
+}
+
+/* Top Branding Bar */
+.brand-header {
+  position: absolute;
+  top: 2rem;
+  left: 3rem;
+  right: 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hotel-title {
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}
+
+.hotel-name {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+.hotel-tagline {
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: var(--color-bronze-accent);
+  text-transform: uppercase;
+  margin-top: -0.2rem;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: auto;
+}
+
+.ambiance-pill-toggle {
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px);
+  border-radius: 9999px;
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.toggle-option {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 9999px;
+  color: var(--color-text-muted);
+  transition: all 250ms ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.toggle-option.active {
+  background: var(--color-bronze-accent);
+  color: var(--color-obsidian-deep);
+  box-shadow: 0 0 12px var(--color-bronze-glow);
+}
+
+.state-badge {
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px);
+  border-radius: 9999px;
+  padding: 0.35rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.state-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-bronze-accent);
+  box-shadow: 0 0 8px var(--color-bronze-accent);
+}
+
+.state-indicator-dot.pulse {
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
