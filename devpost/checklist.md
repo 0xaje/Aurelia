@@ -19,14 +19,14 @@ Build mode: fast
   Learner check: Verify the three rooms (Deluxe ₦85k, Executive ₦145k, Presidential ₦280k) render with distinct ambience and responsive motion.
   Commit: `build: establish aurelia visual foundation`
 
-- [ ] **2. Text command path & deterministic data engine**
+- [x] **2. Text command path & deterministic data engine**
   Becomes usable: The complete signature path works end-to-end via text input with zero microphone dependency.
   Why now: Proves the conversational reasoning, tool contracts, and state transitions reliably before adding audio streaming complexity.
   PRD ref: `prd.md > Primary User Journey`, `prd.md > Text Fallback`
   Spec ref: `spec.md > Tool Contracts`, `spec.md > Text Fallback Lifecycle`
   Build: Implement backend room query service, local text interpreter mapping natural language to `search_rooms` and `adjust_view`, and connect to typed UI action bus.
   Verify (mechanical): Typing anniversary query focuses Executive Suite; typing night view crossfades ambiance; zero hallucinations.
-  Commit: `build: add text command journey`
+  Commit: `feat: add deterministic text command path`
 
 - [ ] **3. AssemblyAI Voice Agent integration (Route A)**
   Becomes usable: Full spoken dialogue over WebSocket using server-minted ephemeral tokens, 24 kHz PCM16 audio streaming, neural turn detection, tool execution, and barge-in.
@@ -49,7 +49,7 @@ Build mode: fast
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — Slice 1 visual stage and state transitions
-- [ ] Core journey verified via text mode (Slice 2)
+- [x] Core journey verified via text mode (Slice 2)
 - [ ] Voice agent and booking verified end-to-end (Slice 3 & 4)
 
 ## Final Review

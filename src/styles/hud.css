@@ -165,6 +165,127 @@
   display: block;
 }
 
+/* Quick Command Suggestion Chips */
+.quick-suggestions-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  pointer-events: auto;
+  max-width: 680px;
+}
+
+.suggestion-chip-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 180ms ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font-sans);
+}
+
+.suggestion-chip-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: var(--color-bronze-accent);
+  color: var(--color-bronze-accent);
+  transform: translateY(-1px);
+}
+
+/* Command Input Bar */
+.command-bar-form {
+  width: 100%;
+  max-width: 580px;
+  margin-bottom: 0.85rem;
+  pointer-events: auto;
+  transition: transform 250ms var(--ease-spring);
+}
+
+.command-bar-form.understanding {
+  animation: barPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes barPulse {
+  from { opacity: 0.85; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1.01); }
+}
+
+.command-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--color-glass-heavy);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 9999px;
+  padding: 0.35rem 0.5rem 0.35rem 1.1rem;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow: var(--shadow-elevated);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.command-input-wrapper:focus-within {
+  border-color: var(--color-bronze-accent);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+}
+
+.command-input-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color-bronze-accent);
+  opacity: 0.8;
+  margin-right: 0.65rem;
+  flex-shrink: 0;
+}
+
+.command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  min-width: 0;
+}
+
+.command-input::placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.command-submit-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-bronze-accent);
+  color: var(--color-obsidian-deep);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms var(--ease-spring);
+  flex-shrink: 0;
+}
+
+.command-submit-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+  background: var(--color-bronze-hover);
+}
+
+.command-submit-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted);
+}
+
 /* Central Interaction Dock */
 .interaction-dock {
   display: flex;

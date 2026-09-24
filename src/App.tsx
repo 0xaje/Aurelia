@@ -5,6 +5,8 @@ import { AureliaFSM } from "./state/stateMachine";
 import { CinematicStage } from "./components/Stage/CinematicStage";
 import { SpecDock } from "./components/SpecDock/SpecDock";
 import { VoiceHUD } from "./components/HUD/VoiceHUD";
+import { interpretTextCommand, formatCommandResponse } from "./domain/interpreter";
+import { searchRooms } from "./domain/roomSearch";
 import "./styles/tokens.css";
 import "./styles/stage.css";
 import "./styles/hud.css";
@@ -95,6 +97,77 @@ export const App: React.FC = () => {
     }
   }, [fsm, fsmState]);
 
+  // Action: Handle Text Command Submission (Slice 2 Core Loop)
+  const handleTextCommandSubmit = useCallback(
+    (commandText: string) => {
+      // 1. Transition FSM to UNDERSTANDING
+      fsm.transition("UNDERSTANDING");
+
+      // 2. Interpret command deterministically
+      const cmd = interpretTextCommand(commandText);
+
+      if (cmd.type === "SEARCH_ROOMS") {
+        const matched = searchRooms(roomsData, cmd.filters);
+        if (matched.length > 0) {
+          const topMatch = matched[0];
+          const responseText = formatCommandResponse(cmd, matched, topMatch);
+
+          // Transition to VISUAL_TRANSITION
+          fsm.transition("VISUAL_TRANSITION");
+          setActiveRoomId(topMatch.id);
+          setFeatureFocus("overview");
+          setTranscript(responseText);
+
+          // Complete transition to EXPLORING
+          setTimeout(() => {
+            fsm.transition("EXPLORING");
+          }, 500);
+        } else {
+          const fallbackMsg = formatCommandResponse(cmd, []);
+          fsm.transition("RESPONDING");
+          setTranscript(fallbackMsg);
+          setNotification({
+            id: Math.random().toString(36).substring(2, 9),
+            level: "info",
+            message: "No suite matches all requested criteria. Showing current selection.",
+            timestamp: Date.now()
+          });
+          setTimeout(() => {
+            fsm.transition("EXPLORING");
+          }, 600);
+        }
+      } else if (cmd.type === "ADJUST_VIEW") {
+        fsm.transition("VISUAL_TRANSITION");
+        if (cmd.ambiance) {
+          setAmbianceMode(cmd.ambiance);
+        }
+        if (cmd.feature) {
+          setFeatureFocus(cmd.feature);
+        }
+        const responseText = formatCommandResponse(cmd, undefined, activeRoom);
+        setTranscript(responseText);
+
+        setTimeout(() => {
+          fsm.transition("EXPLORING");
+        }, 500);
+      } else {
+        // UNSUPPORTED
+        fsm.transition("RESPONDING");
+        setTranscript(cmd.reason);
+        setNotification({
+          id: Math.random().toString(36).substring(2, 9),
+          level: "info",
+          message: cmd.reason,
+          timestamp: Date.now()
+        });
+        setTimeout(() => {
+          fsm.transition("EXPLORING");
+        }, 600);
+      }
+    },
+    [fsm, activeRoom]
+  );
+
   // Keyboard navigation support (Arrow keys, D/N, Space)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -169,6 +242,7 @@ export const App: React.FC = () => {
         transcript={transcript}
         onSelectRoom={handleSelectRoom}
         onToggleMic={handleToggleMic}
+        onSubmitCommand={handleTextCommandSubmit}
       />
     </main>
   );
