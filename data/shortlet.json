@@ -1,0 +1,182 @@
+{
+  "property": {
+    "id": "aurelia-sanctuary",
+    "name": "Aurelia Sanctuary",
+    "tagline": "A secluded modernist retreat nestled above the highland valley",
+    "type": "private_shortlet_estate",
+    "currency": "USD",
+    "pricing": {
+      "nightly_rate_usd": null,
+      "cleaning_fee_usd": null,
+      "status": "available_on_inquiry"
+    },
+    "location": {
+      "label": "Private hillside estate",
+      "region": "Highland desert canyon"
+    },
+    "spaces": [
+      {
+        "id": "exterior",
+        "name": "Estate Exterior & Approach",
+        "category": "outdoor",
+        "description": "Monolithic brutalist facade perched on the mountain slope, framed by native Saguaro cacti and expansive desert canyon vistas.",
+        "representation": "cinematic",
+        "cinematic": {
+          "available": true,
+          "frame": 1,
+          "coverage": "full"
+        },
+        "architecturalFeatures": [
+          "Cantilevered concrete volumes",
+          "Desert stone cladding",
+          "Native desert landscaping",
+          "Private arrival runway"
+        ]
+      },
+      {
+        "id": "entrance",
+        "name": "Entrance Canopy & Water Channel",
+        "category": "entry",
+        "description": "Architectural timber overhang spanning a linear black-tile reflection pool, anchored by mature desert palms and massive vertical pivot doors.",
+        "representation": "cinematic",
+        "cinematic": {
+          "available": true,
+          "frame": 90,
+          "coverage": "full"
+        },
+        "architecturalFeatures": [
+          "Cedar wood soffit",
+          "Black-tile reflection pool",
+          "Twin palm trees",
+          "American walnut pivot doors"
+        ]
+      },
+      {
+        "id": "living_room",
+        "name": "Sunken Living Lounge",
+        "category": "living",
+        "description": "Expansive central gathering pavilion featuring a bespoke modular conversation pit, acoustic wood plank ceiling, and dual-aspect floor-to-ceiling glass.",
+        "representation": "cinematic",
+        "cinematic": {
+          "available": true,
+          "frame": 170,
+          "coverage": "full"
+        },
+        "architecturalFeatures": [
+          "Sunken modular conversation pit",
+          "Tongue-and-groove cedar ceiling",
+          "Honed limestone flooring",
+          "Floor-to-ceiling glass sliding walls"
+        ]
+      },
+      {
+        "id": "kitchen",
+        "name": "Gourmet Kitchen & Dining Island",
+        "category": "culinary",
+        "description": "Open culinary workspace with bookmatched Calacatta marble waterfall island, minimalist bronze barstools, and integrated dark cabinetry.",
+        "representation": "cinematic",
+        "cinematic": {
+          "available": true,
+          "frame": 245,
+          "coverage": "partial"
+        },
+        "architecturalFeatures": [
+          "Calacatta marble waterfall island",
+          "Designer cylinder pendants",
+          "Matte charcoal cabinetry",
+          "Open pavilion orientation"
+        ]
+      },
+      {
+        "id": "hallway",
+        "name": "Central Gallery Corridor",
+        "category": "circulation",
+        "description": "Symmetrical architectural transit corridor with linear vertical slot lighting leading from the public lounge toward the private master suite.",
+        "representation": "cinematic",
+        "cinematic": {
+          "available": true,
+          "frame": 280,
+          "coverage": "full"
+        },
+        "architecturalFeatures": [
+          "Recessed linear slot lighting",
+          "Warm lime plaster walls",
+          "Honed limestone floors",
+          "Threshold perspective"
+        ]
+      },
+      {
+        "id": "master_bedroom",
+        "name": "Master Bedroom Suite",
+        "category": "bedroom",
+        "description": "Secluded primary bedroom sanctuary framed by dual-aspect panoramic glass, featuring a low platform king bed, integrated walnut headboard, and tranquil desert mountain outlooks.",
+        "representation": "detail",
+        "visual": {
+          "type": "image",
+          "src": "/spaces/master-bedroom.jpg",
+          "aspectRatio": "16:9",
+          "alt": "Aurelia Sanctuary Master Bedroom Suite with platform king bed and panoramic desert windows"
+        },
+        "cinematic": {
+          "available": true,
+          "frame": 300,
+          "coverage": "threshold"
+        },
+        "architecturalFeatures": [
+          "Low platform king bed",
+          "Floating American walnut headboard",
+          "Acoustic wood ceiling",
+          "Floor-to-ceiling corner glass"
+        ]
+      },
+      {
+        "id": "ensuite_bathroom",
+        "name": "Primary Ensuite Spa",
+        "category": "bathroom",
+        "description": "Architectural bathroom sanctuary boasting a monolithic freestanding stone soaking tub overlooking an enclosed private cactus meditation courtyard, double walnut vanity, and frameless rainfall shower.",
+        "representation": "detail",
+        "visual": {
+          "type": "image",
+          "src": "/spaces/ensuite-bathroom.jpg",
+          "aspectRatio": "16:9",
+          "alt": "Aurelia Sanctuary Primary Ensuite Bathroom featuring freestanding stone soaking tub and private desert courtyard"
+        },
+        "cinematic": {
+          "available": false,
+          "frame": null,
+          "coverage": "none"
+        },
+        "architecturalFeatures": [
+          "Freestanding stone soaking tub",
+          "Private enclosed cactus courtyard",
+          "Floating walnut double vanity",
+          "Frameless rainfall glass shower"
+        ]
+      },
+      {
+        "id": "infinity_pool",
+        "name": "Cantilevered Infinity Pool & Terrace",
+        "category": "outdoor",
+        "description": "Zero-edge dark basalt infinity pool cantilevered directly over the canyon contour, flanked by honed limestone sun decks, minimalist teak loungers, and 270-degree sunset mountain panoramas.",
+        "representation": "detail",
+        "visual": {
+          "type": "image",
+          "src": "/spaces/infinity-pool.jpg",
+          "aspectRatio": "16:9",
+          "alt": "Aurelia Sanctuary Cantilevered Infinity Pool and Sun Terrace overlooking desert canyon at sunset"
+        },
+        "cinematic": {
+          "available": true,
+          "frame": 1,
+          "coverage": "partial"
+        },
+        "architecturalFeatures": [
+          "Zero-edge dark basalt infinity pool",
+          "Honed limestone sun terrace",
+          "Designer teak loungers",
+          "Cantilevered upper shade canopy"
+        ]
+      }
+    ]
+  }
+}

@@ -39,3 +39,4 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.sublime-workspace
+*:Zone.Identifier

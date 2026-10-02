@@ -1,0 +1,464 @@
+/* ==========================================================================
+   AURELIA — ORA LIVING ARCHITECTURAL PRESENCE
+   A quiet, intelligent, minimal sculptural presence rooted in the property
+   ========================================================================== */
+
+.ora-presence-container {
+  position: fixed;
+  bottom: 36px;
+  right: 36px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Response Floating Whisper (Transient & Restrained) */
+.ora-whisper-bubble {
+  pointer-events: auto;
+  max-width: 320px;
+  padding: 10px 16px;
+  background: rgba(14, 15, 19, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 173, 132, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 12px rgba(201, 173, 132, 0.1);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: ora-whisper-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ora-whisper-bubble.is-fading {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  pointer-events: none;
+}
+
+.ora-whisper-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #c9ad84;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.ora-whisper-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #f5f2ed;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+@keyframes ora-whisper-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Compact Input Surface Attached to Ora */
+.ora-input-surface {
+  pointer-events: auto;
+  width: 340px;
+  max-width: calc(100vw - 48px);
+  background: rgba(12, 13, 17, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 6px 8px 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 16px rgba(201, 173, 132, 0.12);
+  animation: ora-surface-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ora-input-surface:focus-within {
+  border-color: rgba(201, 173, 132, 0.5);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.85), 0 0 24px rgba(201, 173, 132, 0.2);
+}
+
+@keyframes ora-surface-slide {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ora-surface-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: 0.01em;
+  padding: 6px 0;
+}
+
+.ora-surface-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+}
+
+.ora-surface-submit {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 173, 132, 0.35);
+  background: rgba(201, 173, 132, 0.15);
+  color: #c9ad84;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ora-surface-submit:hover:not(:disabled) {
+  background: rgba(201, 173, 132, 0.35);
+  color: #fff;
+  border-color: rgba(201, 173, 132, 0.6);
+  transform: translateY(-1px);
+}
+
+.ora-surface-submit:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.ora-surface-mic {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 173, 132, 0.35);
+  background: rgba(201, 173, 132, 0.12);
+  color: #c9ad84;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ora-surface-mic:hover {
+  background: rgba(201, 173, 132, 0.25);
+  color: #fff;
+  border-color: rgba(201, 173, 132, 0.6);
+  transform: translateY(-1px);
+}
+
+.ora-surface-mic.is-listening {
+  background: rgba(201, 173, 132, 0.4);
+  color: #f7efe3;
+  border-color: #c9ad84;
+  box-shadow: 0 0 12px rgba(201, 173, 132, 0.6);
+  animation: ora-mic-pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes ora-mic-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(201, 173, 132, 0.4);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(201, 173, 132, 0.85);
+  }
+}
+
+/* The Sculptural Ora Object */
+.ora-presence-anchor {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ora-presence-anchor:hover {
+  transform: scale(1.08);
+}
+
+.ora-presence-anchor:active {
+  transform: scale(0.96);
+}
+
+/* Subtle Breathing Halo Ring */
+.ora-halo-ring {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 173, 132, 0.22);
+  background: radial-gradient(
+    circle,
+    rgba(201, 173, 132, 0.08) 0%,
+    rgba(201, 173, 132, 0.02) 60%,
+    transparent 100%
+  );
+  animation: ora-halo-breathe 4s infinite ease-in-out;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+@keyframes ora-halo-breathe {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.4;
+    border-color: rgba(201, 173, 132, 0.18);
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.85;
+    border-color: rgba(201, 173, 132, 0.38);
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.4;
+    border-color: rgba(201, 173, 132, 0.18);
+  }
+}
+
+/* Sculptural Core Triangle Glyph */
+.ora-core-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 8px rgba(201, 173, 132, 0.55));
+  animation: ora-triangle-blink 3.4s infinite ease-in-out;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ora-core-triangle-svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  transform: translateY(-0.5px);
+  transition: filter 0.3s ease;
+}
+
+/* Rhythmic Blinking / Breathing Animation */
+@keyframes ora-triangle-blink {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.82;
+    filter: drop-shadow(0 0 6px rgba(201, 173, 132, 0.35));
+  }
+  44% {
+    transform: scale(1.02);
+    opacity: 0.94;
+    filter: drop-shadow(0 0 10px rgba(201, 173, 132, 0.6));
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px rgba(247, 239, 227, 0.95));
+  }
+  56% {
+    transform: scale(1.02);
+    opacity: 0.94;
+    filter: drop-shadow(0 0 10px rgba(201, 173, 132, 0.6));
+  }
+}
+
+/* Ora State Modifiers — Warm gold, bronze, obsidian & luminous tones */
+.ora-presence-anchor[data-state="hover"] .ora-core-orb,
+.ora-presence-anchor:hover .ora-core-orb {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 14px rgba(201, 173, 132, 0.85));
+}
+
+.ora-presence-anchor[data-state="active"] .ora-core-orb {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 18px rgba(201, 173, 132, 0.95));
+}
+
+.ora-presence-anchor[data-state="active"] .ora-halo-ring {
+  border-color: rgba(201, 173, 132, 0.5);
+  animation-duration: 2.2s;
+}
+
+/* Listening State (Ready for Phase 5 voice) */
+.ora-presence-anchor[data-state="listening"] .ora-core-orb {
+  animation: ora-listening-pulse 1.8s infinite ease-in-out;
+  filter: drop-shadow(0 0 16px rgba(247, 239, 227, 0.9));
+}
+
+.ora-presence-anchor[data-state="listening"] .ora-halo-ring {
+  border-color: rgba(201, 173, 132, 0.55);
+  animation: ora-halo-breathe 2s infinite ease-in-out;
+}
+
+@keyframes ora-listening-pulse {
+  0%, 100% {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Processing State: Higher rhythm luminosity, ZERO emerald/green */
+.ora-presence-anchor[data-state="processing"] .ora-core-orb {
+  animation: ora-processing-rhythm 1.1s infinite ease-in-out;
+  filter: drop-shadow(0 0 20px rgba(247, 239, 227, 0.95));
+}
+
+.ora-presence-anchor[data-state="processing"] .ora-halo-ring {
+  border-color: rgba(201, 173, 132, 0.65);
+  animation: ora-processing-spin 1.8s infinite linear;
+}
+
+@keyframes ora-processing-rhythm {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 8px rgba(201, 173, 132, 0.5));
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(247, 239, 227, 0.95));
+  }
+}
+
+@keyframes ora-processing-spin {
+  0% { transform: scale(1) rotate(0deg); opacity: 0.5; }
+  50% { transform: scale(1.16) rotate(180deg); opacity: 0.9; }
+  100% { transform: scale(1) rotate(360deg); opacity: 0.5; }
+}
+
+/* Responding State */
+.ora-presence-anchor[data-state="responding"] .ora-core-orb {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 16px rgba(201, 173, 132, 0.85));
+}
+
+.ora-presence-anchor[data-state="responding"] .ora-halo-ring {
+  border-color: rgba(201, 173, 132, 0.45);
+}
+
+/* Clarification State */
+.ora-presence-anchor[data-state="clarification"] .ora-core-orb {
+  filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.75));
+}
+
+/* Error State (Restrained warm warning treatment) */
+.ora-presence-anchor[data-state="error"] .ora-core-orb {
+  filter: drop-shadow(0 0 14px rgba(214, 98, 80, 0.7));
+}
+
+.ora-presence-anchor[data-state="error"] .ora-halo-ring {
+  border-color: rgba(214, 98, 80, 0.4);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .ora-presence-container {
+    bottom: 24px;
+    right: 20px;
+  }
+
+  .ora-input-surface {
+    width: calc(100vw - 40px);
+  }
+
+  .ora-whisper-bubble {
+    max-width: calc(100vw - 40px);
+  }
+}
+
+/* Hands-Free Live Active Microphone Indicator */
+.ora-mic-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 10px;
+  background: rgba(14, 15, 19, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 173, 132, 0.32);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 10px rgba(201, 173, 132, 0.12);
+  pointer-events: auto;
+  animation: ora-live-badge-appear 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.ora-mic-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c9ad84;
+  box-shadow: 0 0 8px #c9ad84;
+  animation: ora-live-dot-pulse 1.8s infinite ease-in-out;
+}
+
+.ora-mic-live-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f5f2ed;
+}
+
+@keyframes ora-live-dot-pulse {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+    box-shadow: 0 0 4px #c9ad84;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+    box-shadow: 0 0 12px #f7efe3;
+  }
+}
+
+@keyframes ora-live-badge-appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
