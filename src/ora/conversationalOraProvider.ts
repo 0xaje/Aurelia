@@ -48,14 +48,26 @@ export class ConversationalOraProvider implements OraProvider {
 
     let decision: OraDecision | null = null;
 
+    // 0. Fast-path spatial navigation intent resolution:
+    // Instantly maps directives ("show me the toilet", "show me around", "take me inside", etc.) in <1ms
+    try {
+      const { resolveDirectNavigationIntent } = await import("../../server/oraConversationEngine");
+      const fastNav = resolveDirectNavigationIntent(trimmed, context, conversationContext);
+      if (fastNav) {
+        decision = fastNav;
+      }
+    } catch {
+      // Continue to network call
+    }
+
     const isBrowserRuntime =
       typeof window !== "undefined" &&
       typeof window.document !== "undefined" &&
       typeof window.location !== "undefined" &&
       Boolean(window.location.protocol && window.location.protocol.startsWith("http"));
 
-    // 1. In browser runtime, attempt secure server endpoint call
-    if (isBrowserRuntime && typeof fetch === "function") {
+    // 1. In browser runtime, attempt secure server endpoint call if not already resolved by fast-path
+    if (!decision && isBrowserRuntime && typeof fetch === "function") {
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 35000);
