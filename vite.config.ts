@@ -38,8 +38,11 @@ export default defineConfig(({ mode }) => {
   if (env.ASSEMBLYAI_API_KEY) {
     process.env.ASSEMBLYAI_API_KEY = env.ASSEMBLYAI_API_KEY;
   }
-  if (env.GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
+  if (env.OPENROUTER_API_KEY) {
+    process.env.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
+  }
+  if (env.OPENROUTER_MODEL) {
+    process.env.OPENROUTER_MODEL = env.OPENROUTER_MODEL;
   }
 
   return {

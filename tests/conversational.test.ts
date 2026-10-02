@@ -228,7 +228,7 @@ describe("Phase 5C: Decision Validation & Defensive Robustness", () => {
 });
 
 describe("Phase 5C.1: Engine Modes & No Silent Fallback", () => {
-  test("conversational mode returns engineMode: 'error' when GEMINI_API_KEY is missing without silent fallback", async () => {
+  test("conversational mode returns engineMode: 'error' when OPENROUTER_API_KEY is missing without silent fallback", async () => {
     // When in conversational mode without key, must return explicit error state, NOT fake conversational
     const res = await executeServerOraConversation("Where would I sleep?", undefined, undefined, {
       mode: "conversational",
@@ -236,7 +236,7 @@ describe("Phase 5C.1: Engine Modes & No Silent Fallback", () => {
     });
     assert.equal(res.engineMode, "error");
     assert.equal(res.fallback, false);
-    assert.ok(res.response.includes("GEMINI_API_KEY"));
+    assert.ok(res.response.includes("OPENROUTER_API_KEY"));
     assert.equal(res.response.includes("I'm here to assist"), false);
   });
 

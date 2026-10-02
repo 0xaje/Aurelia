@@ -56,6 +56,7 @@ async function runScript() {
     }
     session.recentTurns.push({ role: "user", text: s.text, timestamp: Date.now() });
     session.recentTurns.push({ role: "ora", text: d.response, decision: d, timestamp: Date.now() });
+    await new Promise(r => setTimeout(r, 1200));
   }
 
   console.log("=== ALL 12 CONVERSATION TURNS VERIFIED SUCCESSFULLY ===");

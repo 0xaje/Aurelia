@@ -13,7 +13,7 @@ import { interpretOraInput } from "./oraInterpreter";
  * 
  * NOTE: This is a deterministic rule-based development implementation satisfying
  * the OraProvider interface. It does not call an external LLM and never hallucinates.
- * Future model providers (e.g. GeminiOraProvider) can implement this identical interface.
+ * Future model providers (e.g. OpenRouterOraProvider) can implement this identical interface.
  */
 export class DeterministicOraProvider implements OraProvider {
   public readonly name = "DeterministicOraProvider (Development Adapter)";

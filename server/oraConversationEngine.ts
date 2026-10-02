@@ -1,9 +1,9 @@
 /**
- * AURELIA — Server-side Ora Conversational Intelligence Engine (Phase 5C.1)
+ * AURELIA — Server-side Ora Conversational Intelligence Engine (OpenRouter Migration)
  * 
  * Implements authoritative conversational understanding, natural language reasoning,
  * property grounding, multi-turn session continuity, structured decision generation,
- * and high-fidelity Google Gemini 1.5 Flash integration with NO silent fallbacks.
+ * and high-fidelity OpenRouter integration with NO silent fallbacks.
  */
 
 import { SpaceId, AmbianceId } from "../src/domain/spatial";
@@ -32,10 +32,43 @@ export const VALID_AMBIANCES: readonly AmbianceId[] = [
   "night"
 ] as const;
 
+export const DEFAULT_OPENROUTER_MODEL = "liquid/lfm-2.5-2.6b:free";
+
 export interface EngineExecutionOptions {
   apiKey?: string;
+  model?: string;
   timeoutMs?: number;
   mode?: OraEngineMode;
+}
+
+/**
+ * Extracts and parses a JSON object from raw LLM output, handling markdown code blocks
+ * (```json ... ```) or conversational wrappers.
+ */
+export function extractJsonFromLlmResponse(raw: string): unknown {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("Empty or non-string LLM response");
+  }
+  const clean = raw.trim();
+
+  // 1. Check for markdown ```json ... ``` code blocks
+  const codeBlockMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  let candidate = codeBlockMatch ? codeBlockMatch[1].trim() : clean;
+
+  if (candidate.startsWith("```")) {
+    candidate = candidate.replace(/^```(?:json)?\s*/i, "").trim();
+  }
+
+  // 2. Locate outermost JSON object boundaries { ... }
+  const firstBrace = candidate.indexOf("{");
+  const lastBrace = candidate.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const jsonSubstring = candidate.substring(firstBrace, lastBrace + 1);
+    return JSON.parse(jsonSubstring);
+  }
+
+  // 3. Fallback direct parse
+  return JSON.parse(candidate);
 }
 
 /**
@@ -50,20 +83,27 @@ export function validateOraDecision(raw: unknown): OraDecision {
   }
 
   const obj = raw as Record<string, unknown>;
-  const type = typeof obj.type === "string" ? obj.type : "PROPERTY_ANSWER";
+  const rawType = typeof obj.type === "string" ? obj.type.trim() : "PROPERTY_ANSWER";
   const response =
     typeof obj.response === "string" && obj.response.trim().length > 0
       ? obj.response.trim()
       : "Of course.";
 
-  switch (type) {
+  const rawSpace = typeof obj.spaceId === "string" ? obj.spaceId.trim() : undefined;
+  const rawAmbiance = typeof obj.ambiance === "string" ? obj.ambiance.trim() : undefined;
+  const validSpace = rawSpace && VALID_SPACES.includes(rawSpace as SpaceId) ? (rawSpace as SpaceId) : undefined;
+  const validAmbiance = rawAmbiance && VALID_AMBIANCES.includes(rawAmbiance as AmbianceId) ? (rawAmbiance as AmbianceId) : undefined;
+
+  switch (rawType) {
     case "GREETING":
       return { type: "GREETING", response };
 
     case "SHOW_SPACE": {
-      const spaceId = obj.spaceId as SpaceId;
-      if (VALID_SPACES.includes(spaceId)) {
-        return { type: "SHOW_SPACE", spaceId, response };
+      if (validSpace && validAmbiance) {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      }
+      if (validSpace) {
+        return { type: "SHOW_SPACE", spaceId: validSpace, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -72,9 +112,11 @@ export function validateOraDecision(raw: unknown): OraDecision {
     }
 
     case "CHANGE_AMBIANCE": {
-      const ambiance = obj.ambiance as AmbianceId;
-      if (VALID_AMBIANCES.includes(ambiance)) {
-        return { type: "CHANGE_AMBIANCE", ambiance, response };
+      if (validSpace && validAmbiance) {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      }
+      if (validAmbiance) {
+        return { type: "CHANGE_AMBIANCE", ambiance: validAmbiance, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -83,19 +125,14 @@ export function validateOraDecision(raw: unknown): OraDecision {
     }
 
     case "SHOW_SPACE_AND_AMBIANCE": {
-      const spaceId = obj.spaceId as SpaceId;
-      const ambiance = obj.ambiance as AmbianceId;
-      const validSpace = VALID_SPACES.includes(spaceId);
-      const validAmbiance = VALID_AMBIANCES.includes(ambiance);
-
       if (validSpace && validAmbiance) {
-        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId, ambiance, response };
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
       }
       if (validSpace) {
-        return { type: "SHOW_SPACE", spaceId, response };
+        return { type: "SHOW_SPACE", spaceId: validSpace, response };
       }
       if (validAmbiance) {
-        return { type: "CHANGE_AMBIANCE", ambiance, response };
+        return { type: "CHANGE_AMBIANCE", ambiance: validAmbiance, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -119,18 +156,26 @@ export function validateOraDecision(raw: unknown): OraDecision {
           : "I'm here to help you explore Aurelia and plan your stay. What would you like to know about the sanctuary?"
       };
 
-    default:
+    case "PROPERTY_ANSWER":
+    default: {
+      if (validSpace && validAmbiance && validAmbiance !== "day") {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      }
+      if (validSpace) {
+        return { type: "SHOW_SPACE", spaceId: validSpace, response };
+      }
       return { type: "PROPERTY_ANSWER", response };
+    }
   }
 }
 
 /**
- * Retrieves the Google Gemini API key from environment variables or .env file.
+ * Retrieves the OpenRouter API key from server environment variables or .env file.
  */
-export function getGeminiApiKey(): string | undefined {
-  if (typeof process !== "undefined" && process.env?.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) {
-    const key = process.env.GEMINI_API_KEY.trim();
-    if (!key.includes("your_gemini_api_key_here")) {
+export function getOpenRouterApiKey(): string | undefined {
+  if (typeof process !== "undefined" && process.env?.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY.trim()) {
+    const key = process.env.OPENROUTER_API_KEY.trim();
+    if (!key.includes("your_openrouter_api_key_here")) {
       return key;
     }
   }
@@ -138,106 +183,167 @@ export function getGeminiApiKey(): string | undefined {
 }
 
 /**
- * Calls Google Gemini (gemini-1.5-flash) with structured JSON enforcement.
+ * Retrieves the configured OpenRouter model identifier, defaulting to a supported free model.
  */
-async function callGeminiStructuredLlm(
+export function getOpenRouterModel(): string {
+  if (typeof process !== "undefined" && process.env?.OPENROUTER_MODEL && process.env.OPENROUTER_MODEL.trim()) {
+    return process.env.OPENROUTER_MODEL.trim();
+  }
+  return DEFAULT_OPENROUTER_MODEL;
+}
+
+/**
+ * Builds the standard OpenRouter chat completions request payload.
+ */
+export function buildOpenRouterPayload(
   input: string,
+  model: string = getOpenRouterModel(),
+  session?: OraConversationContext
+): Record<string, unknown> {
+  return {
+    model,
+    messages: [
+      {
+        role: "system",
+        content: ORA_SYSTEM_PROMPT
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          visitorUtterance: input,
+          currentSpace: session?.currentSpace || null,
+          lastSpace: session?.lastSpace || null,
+          currentAmbiance: session?.currentAmbiance || "day",
+          recentTurns: session?.recentTurns?.slice(-6) || []
+        })
+      }
+    ],
+    temperature: 0.2,
+    max_tokens: 600
+  };
+}
+
+/**
+ * Dispatches an HTTP request to OpenRouter API (https://openrouter.ai/api/v1/chat/completions).
+ * Uses node:https with family: 4 when running in Node for deterministic IPv4 connectivity,
+ * with standard fetch fallback for other environments.
+ */
+export async function sendOpenRouterRequest(
   apiKey: string,
-  _context?: PropertyContext,
-  session?: OraConversationContext,
-  timeoutMs = 4500
-): Promise<OraDecision | null> {
+  payload: Record<string, unknown>,
+  timeoutMs = 12000
+): Promise<{ status: number; body: any }> {
+  const jsonPayload = JSON.stringify(payload);
+
+  if (typeof process !== "undefined" && process.versions?.node) {
+    try {
+      const https = await import("node:https");
+      if (https && typeof https.request === "function") {
+        return await new Promise<{ status: number; body: any }>((resolve, reject) => {
+          const req = https.request(
+            {
+              hostname: "openrouter.ai",
+              path: "/api/v1/chat/completions",
+              method: "POST",
+              family: 4,
+              headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "Content-Length": Buffer.byteLength(jsonPayload),
+                "HTTP-Referer": "https://aurelia-shortlet.local",
+                "X-Title": "Aurelia Sanctuary"
+              },
+              timeout: timeoutMs
+            },
+            (res: any) => {
+              let data = "";
+              res.on("data", (chunk: any) => (data += chunk));
+              res.on("end", () => {
+                try {
+                  const parsed = JSON.parse(data);
+                  resolve({ status: res.statusCode || 200, body: parsed });
+                } catch {
+                  resolve({ status: res.statusCode || 200, body: data });
+                }
+              });
+            }
+          );
+
+          req.on("timeout", () => {
+            req.destroy(new Error(`OpenRouter request timed out after ${timeoutMs}ms`));
+          });
+          req.on("error", (err: any) => reject(err));
+          req.write(jsonPayload);
+          req.end();
+        });
+      }
+    } catch {
+      // Fallback to fetch
+    }
+  }
+
+  // Universal fetch fallback
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-
   try {
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const payload = {
-      systemInstruction: {
-        parts: [{ text: ORA_SYSTEM_PROMPT }]
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: JSON.stringify({
-                visitorUtterance: input,
-                currentSpace: session?.currentSpace || null,
-                lastSpace: session?.lastSpace || null,
-                currentAmbiance: session?.currentAmbiance || "day",
-                recentTurns: session?.recentTurns?.slice(-6) || []
-              })
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.2,
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            type: {
-              type: "STRING",
-              enum: [
-                "GREETING",
-                "PROPERTY_ANSWER",
-                "SHOW_SPACE",
-                "CHANGE_AMBIANCE",
-                "SHOW_SPACE_AND_AMBIANCE",
-                "CLARIFICATION",
-                "BOOKING_INTENT",
-                "OUT_OF_SCOPE"
-              ]
-            },
-            spaceId: {
-              type: "STRING",
-              enum: [
-                "exterior",
-                "entrance",
-                "living_room",
-                "kitchen",
-                "hallway",
-                "master_bedroom",
-                "ensuite_bathroom",
-                "infinity_pool"
-              ]
-            },
-            ambiance: {
-              type: "STRING",
-              enum: ["day", "sunset", "night"]
-            },
-            response: {
-              type: "STRING"
-            }
-          },
-          required: ["type", "response"]
-        }
-      }
-    };
-
-    const res = await fetch(geminiUrl, {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://aurelia-shortlet.local",
+        "X-Title": "Aurelia Sanctuary"
+      },
+      body: jsonPayload,
       signal: controller.signal
     });
+    const parsed = await res.json();
+    return { status: res.status, body: parsed };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-    if (res.ok) {
-      const data = (await res.json()) as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      };
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        const parsed = JSON.parse(text);
+/**
+ * Calls OpenRouter with structured JSON parsing and domain decision validation.
+ */
+export async function callOpenRouterStructuredLlm(
+  input: string,
+  apiKey: string,
+  model = getOpenRouterModel(),
+  _context?: PropertyContext,
+  session?: OraConversationContext,
+  timeoutMs = 12000
+): Promise<OraDecision | null> {
+  const payload = buildOpenRouterPayload(input, model, session);
+
+  try {
+    const res = await sendOpenRouterRequest(apiKey, payload, timeoutMs);
+
+    if (res.status >= 200 && res.status < 300 && res.body && typeof res.body === "object") {
+      const choice = res.body.choices?.[0];
+      const message = choice?.message;
+      let rawText = message?.content;
+
+      if (!rawText && message?.reasoning) {
+        rawText = message.reasoning;
+      }
+
+      if (rawText && typeof rawText === "string") {
+        const parsed = extractJsonFromLlmResponse(rawText);
         return validateOraDecision(parsed);
       }
     }
 
+    if (res.status >= 400) {
+      const errMsg = res.body?.error?.message || `HTTP ${res.status}`;
+      console.warn(`[Ora OpenRouter] Provider returned error: ${errMsg}`);
+    }
+
     return null;
-  } finally {
-    clearTimeout(timer);
+  } catch (err: any) {
+    console.warn(`[Ora OpenRouter] Request failed: ${err?.message || "Unknown error"}`);
+    return null;
   }
 }
 
@@ -262,29 +368,31 @@ export async function executeServerOraConversation(
     };
   }
 
-  const apiKey = options.apiKey || getGeminiApiKey();
+  const apiKey = options.apiKey !== undefined ? options.apiKey : getOpenRouterApiKey();
+  const model = options.model || getOpenRouterModel();
 
   // Determine mode: default to conversational unless explicitly set to deterministic-dev
   const mode: OraEngineMode = options.mode || (apiKey ? "conversational" : "conversational");
 
   if (mode === "conversational") {
     if (!apiKey) {
-      // Phase 5C.1: No silent fallback when conversational mode is expected!
+      // No silent fallback when conversational mode is expected
       return {
         type: "PROPERTY_ANSWER",
-        response: "Conversational intelligence is awaiting GEMINI_API_KEY configuration in the server environment.",
+        response: "Conversational intelligence is awaiting OPENROUTER_API_KEY configuration in the server environment.",
         engineMode: "error",
         fallback: false
       };
     }
 
     try {
-      const decision = await callGeminiStructuredLlm(
+      const decision = await callOpenRouterStructuredLlm(
         trimmed,
         apiKey,
+        model,
         context,
         session,
-        options.timeoutMs ?? 4500
+        options.timeoutMs ?? 12000
       );
 
       if (decision) {
@@ -485,7 +593,9 @@ export function evaluateSemanticDecision(
     clean === "can i see it at night" ||
     clean === "what about at night" ||
     clean === "show it at night" ||
-    clean === "see it at night"
+    clean === "see it at night" ||
+    clean === "what would it be like at night" ||
+    clean === "what is it like at night"
   ) {
     const targetSpace = session?.currentSpace || "exterior";
     return {
@@ -493,6 +603,40 @@ export function evaluateSemanticDecision(
       spaceId: targetSpace,
       ambiance: "night",
       response: `Showing the ${targetSpace.replace("_", " ")} at night.`
+    };
+  }
+
+  if (
+    clean.includes("somewhere quieter") ||
+    clean.includes("somewhere quiet") ||
+    clean.includes("more quiet")
+  ) {
+    return {
+      type: "SHOW_SPACE",
+      spaceId: "master_bedroom",
+      response: "The master bedroom suite offers complete acoustic seclusion above the canyon."
+    };
+  }
+
+  if (
+    clean === "no i meant the bedroom" ||
+    clean === "i meant the bedroom" ||
+    clean === "no the bedroom"
+  ) {
+    return {
+      type: "SHOW_SPACE",
+      spaceId: "master_bedroom",
+      response: "Understood. Guiding you to the master bedroom suite."
+    };
+  }
+
+  if (
+    clean.includes("forget that") && (clean.includes("pool") || clean.includes("swim"))
+  ) {
+    return {
+      type: "SHOW_SPACE",
+      spaceId: "infinity_pool",
+      response: "The cantilevered infinity pool terrace overlooks the western horizon."
     };
   }
 

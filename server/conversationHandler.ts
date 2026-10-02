@@ -14,17 +14,21 @@ import { PropertyContext } from "../src/ora/oraTypes";
 let cachedPropertyContext: PropertyContext | null = null;
 
 function ensureEnvironmentLoaded(): void {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     try {
       const envPath = path.resolve(process.cwd(), ".env");
       if (fs.existsSync(envPath)) {
         const content = fs.readFileSync(envPath, "utf-8");
-        const match = content.match(/^GEMINI_API_KEY=(.+)$/m);
-        if (match && match[1]) {
-          const key = match[1].trim().replace(/^["']|["']$/g, "");
-          if (key && !key.includes("your_gemini_api_key_here")) {
-            process.env.GEMINI_API_KEY = key;
+        const matchKey = content.match(/^OPENROUTER_API_KEY=(.+)$/m);
+        if (matchKey && matchKey[1]) {
+          const key = matchKey[1].trim().replace(/^["']|["']$/g, "");
+          if (key && !key.includes("your_openrouter_api_key_here")) {
+            process.env.OPENROUTER_API_KEY = key;
           }
+        }
+        const matchModel = content.match(/^OPENROUTER_MODEL=(.+)$/m);
+        if (matchModel && matchModel[1] && !process.env.OPENROUTER_MODEL) {
+          process.env.OPENROUTER_MODEL = matchModel[1].trim().replace(/^["']|["']$/g, "");
         }
       }
     } catch {
@@ -130,7 +134,7 @@ export async function handleConversationRequest(
         ? {
             engine: decision.engineMode ? decision.engineMode.toUpperCase() : "CONVERSATIONAL",
             provider: decision.engineMode === "conversational"
-              ? "Google Gemini (gemini-1.5-flash)"
+              ? `OpenRouter (${process.env.OPENROUTER_MODEL || "liquid/lfm-2.5-2.6b:free"})`
               : decision.engineMode === "error"
               ? "None (API Key missing or connection error)"
               : "Deterministic Semantic Engine",
