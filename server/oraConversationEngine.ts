@@ -171,7 +171,21 @@ export function detectExplicitAmbiance(input?: string): AmbianceId | null {
  * Enforces spatial navigation grounding: if the visitor asked to see/visit a space,
  * guarantees the camera navigates (SHOW_SPACE) rather than merely talking.
  */
-export function validateOraDecision(raw: unknown, userUtterance?: string): OraDecision {
+export function validateOraDecision(
+  raw: unknown,
+  userUtterance?: string,
+  session?: OraConversationContext
+): OraDecision {
+  const cleanUtterance = userUtterance?.trim().toLowerCase() || "";
+  if (cleanUtterance === "take me back" || cleanUtterance === "go back" || cleanUtterance === "back") {
+    const targetSpace = (session?.lastSpace && VALID_SPACES.includes(session.lastSpace)) ? session.lastSpace : "exterior";
+    return {
+      type: "SHOW_SPACE",
+      spaceId: targetSpace,
+      response: `Returning to the ${targetSpace.replace("_", " ")}.`
+    };
+  }
+
   const inferredSpace = detectExplicitSpace(userUtterance);
   const inferredAmbiance = detectExplicitAmbiance(userUtterance);
 
@@ -466,7 +480,7 @@ export async function callOllamaStructuredLlm(
       const rawText = res.body.message?.content;
       if (rawText && typeof rawText === "string") {
         const parsed = extractJsonFromLlmResponse(rawText);
-        return validateOraDecision(parsed, input);
+        return validateOraDecision(parsed, input, session);
       }
     }
 
@@ -621,7 +635,7 @@ export async function callOpenRouterStructuredLlm(
 
       if (rawText && typeof rawText === "string") {
         const parsed = extractJsonFromLlmResponse(rawText);
-        return validateOraDecision(parsed, input);
+        return validateOraDecision(parsed, input, session);
       }
     }
 
