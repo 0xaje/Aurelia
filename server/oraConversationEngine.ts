@@ -80,8 +80,117 @@ export function extractJsonFromLlmResponse(raw: string): unknown {
 /**
  * Validates and sanitizes a raw decision object against Aurelia's domain boundaries.
  */
-export function validateOraDecision(raw: unknown): OraDecision {
+export const DEFAULT_SPACE_RESPONSES: Record<SpaceId, string> = {
+  master_bedroom: "The master bedroom suite features a low platform bed and panoramic desert windows.",
+  ensuite_bathroom: "The ensuite spa features a freestanding stone tub overlooking a private cactus courtyard.",
+  infinity_pool: "The cantilevered infinity pool overlooks the western canyon contours.",
+  living_room: "The sunken living lounge is anchored by a conversation pit and panoramic canyon views.",
+  kitchen: "The kitchen features Calacatta marble with an integrated culinary island.",
+  exterior: "The monolithic exterior is framed by desert stone and native saguaro cacti.",
+  entrance: "The entrance features a cedar soffit above a dark reflection channel.",
+  hallway: "The central gallery corridor connects the living wing to the private suites."
+};
+
+/**
+ * Detects explicit architectural spaces mentioned in visitor utterance.
+ */
+export function detectExplicitSpace(input?: string): SpaceId | null {
+  if (!input) return null;
+  const norm = input.toLowerCase().replace(/[^a-z0-9_\s]/g, " ").replace(/\s+/g, " ").trim();
+
+  // If user is inquiring about price or how to book, do not force-navigate
+  if (
+    norm.includes("how much") ||
+    norm.includes("what is the price") ||
+    norm.includes("what does it cost") ||
+    norm.includes("cost per night") ||
+    norm.includes("nightly rate") ||
+    norm.includes("how do i book") ||
+    norm.includes("how to book") ||
+    norm.includes("make a reservation")
+  ) {
+    return null;
+  }
+
+  // Unsupported spaces safeguard
+  const unsupported = ["garage", "gym", "tennis court", "helipad", "cinema", "theater", "sauna", "wine cellar", "guest room", "kids room"];
+  for (const u of unsupported) {
+    if (norm.includes(u)) return null;
+  }
+
+  if (norm.includes("bedroom") || norm.includes("sleep") || norm.includes("wake up") || norm.includes("bed")) {
+    return "master_bedroom";
+  }
+  if (norm.includes("bathroom") || norm.includes("freshen up") || norm.includes("shower") || norm.includes("bath") || norm.includes("tub") || norm.includes("clean up")) {
+    return "ensuite_bathroom";
+  }
+  if (norm.includes("pool") || norm.includes("swim") || norm.includes("deck") || norm.includes("terrace")) {
+    return "infinity_pool";
+  }
+  if (norm.includes("living room") || norm.includes("lounge") || norm.includes("conversation pit") || norm.includes("sit") || norm.includes("gather")) {
+    return "living_room";
+  }
+  if (norm.includes("kitchen") || norm.includes("cook") || norm.includes("island") || norm.includes("meals") || norm.includes("dining")) {
+    return "kitchen";
+  }
+  if (norm.includes("exterior") || norm.includes("outside") || norm.includes("facade") || norm.includes("approach")) {
+    return "exterior";
+  }
+  if (
+    norm.includes("entrance") ||
+    norm.includes("entry") ||
+    norm.includes("front door") ||
+    norm.includes("canopy") ||
+    norm.includes("inside") ||
+    norm.includes("take me inside") ||
+    norm.includes("step inside") ||
+    norm.includes("go inside")
+  ) {
+    return "entrance";
+  }
+  if (norm.includes("hallway") || norm.includes("gallery") || norm.includes("corridor")) {
+    return "hallway";
+  }
+  return null;
+}
+
+/**
+ * Detects explicit lighting ambiances mentioned in visitor utterance.
+ */
+export function detectExplicitAmbiance(input?: string): AmbianceId | null {
+  if (!input) return null;
+  const norm = input.toLowerCase();
+  if (norm.includes("sunset") || norm.includes("golden hour") || norm.includes("sun down") || norm.includes("sundown")) return "sunset";
+  if (norm.includes("night") || norm.includes("after dark") || norm.includes("dark") || norm.includes("evening")) return "night";
+  if (norm.includes("day") || norm.includes("daytime") || norm.includes("sunlight") || norm.includes("morning")) return "day";
+  return null;
+}
+
+/**
+ * Validates and sanitizes a raw decision object against Aurelia's domain boundaries.
+ * Enforces spatial navigation grounding: if the visitor asked to see/visit a space,
+ * guarantees the camera navigates (SHOW_SPACE) rather than merely talking.
+ */
+export function validateOraDecision(raw: unknown, userUtterance?: string): OraDecision {
+  const inferredSpace = detectExplicitSpace(userUtterance);
+  const inferredAmbiance = detectExplicitAmbiance(userUtterance);
+
   if (!raw || typeof raw !== "object") {
+    if (inferredSpace && inferredAmbiance && inferredAmbiance !== "day") {
+      return {
+        type: "SHOW_SPACE_AND_AMBIANCE",
+        spaceId: inferredSpace,
+        ambiance: inferredAmbiance,
+        response: DEFAULT_SPACE_RESPONSES[inferredSpace]
+      };
+    }
+    if (inferredSpace) {
+      return {
+        type: "SHOW_SPACE",
+        spaceId: inferredSpace,
+        response: DEFAULT_SPACE_RESPONSES[inferredSpace]
+      };
+    }
     return {
       type: "PROPERTY_ANSWER",
       response: "Aurelia Sanctuary offers eight architectural spaces across day, sunset, and night."
@@ -90,7 +199,7 @@ export function validateOraDecision(raw: unknown): OraDecision {
 
   const obj = raw as Record<string, unknown>;
   const rawType = typeof obj.type === "string" ? obj.type.trim() : "PROPERTY_ANSWER";
-  const response =
+  let response =
     typeof obj.response === "string" && obj.response.trim().length > 0
       ? obj.response.trim()
       : "Of course.";
@@ -100,16 +209,49 @@ export function validateOraDecision(raw: unknown): OraDecision {
   const validSpace = rawSpace && VALID_SPACES.includes(rawSpace as SpaceId) ? (rawSpace as SpaceId) : undefined;
   const validAmbiance = rawAmbiance && VALID_AMBIANCES.includes(rawAmbiance as AmbianceId) ? (rawAmbiance as AmbianceId) : undefined;
 
+  const effectiveSpace = validSpace || inferredSpace;
+  const effectiveAmbiance = validAmbiance || inferredAmbiance;
+
+  // Spatial intent recovery: if visitor asked to see/visit a space, guarantee navigation
+  const isNavigationUtterance =
+    userUtterance &&
+    Boolean(inferredSpace) &&
+    !/(how much|price|cost|rate|who built|what is|book|reserve)/i.test(userUtterance);
+
+  if (isNavigationUtterance && inferredSpace) {
+    if (rawType === "GREETING" || rawType === "CLARIFICATION" || rawType === "PROPERTY_ANSWER" || !validSpace) {
+      const isGenericResponse =
+        /welcome to aurelia|i'm here to|how can i|currently outside|do you mean/i.test(response);
+      const groundedResponse = isGenericResponse
+        ? DEFAULT_SPACE_RESPONSES[inferredSpace]
+        : response;
+
+      if (effectiveAmbiance && effectiveAmbiance !== "day") {
+        return {
+          type: "SHOW_SPACE_AND_AMBIANCE",
+          spaceId: inferredSpace,
+          ambiance: effectiveAmbiance,
+          response: groundedResponse
+        };
+      }
+      return {
+        type: "SHOW_SPACE",
+        spaceId: inferredSpace,
+        response: groundedResponse
+      };
+    }
+  }
+
   switch (rawType) {
     case "GREETING":
       return { type: "GREETING", response };
 
     case "SHOW_SPACE": {
-      if (validSpace && validAmbiance) {
-        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      if (effectiveSpace && effectiveAmbiance) {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: effectiveSpace, ambiance: effectiveAmbiance, response };
       }
-      if (validSpace) {
-        return { type: "SHOW_SPACE", spaceId: validSpace, response };
+      if (effectiveSpace) {
+        return { type: "SHOW_SPACE", spaceId: effectiveSpace, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -118,11 +260,11 @@ export function validateOraDecision(raw: unknown): OraDecision {
     }
 
     case "CHANGE_AMBIANCE": {
-      if (validSpace && validAmbiance) {
-        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      if (effectiveSpace && effectiveAmbiance) {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: effectiveSpace, ambiance: effectiveAmbiance, response };
       }
-      if (validAmbiance) {
-        return { type: "CHANGE_AMBIANCE", ambiance: validAmbiance, response };
+      if (effectiveAmbiance) {
+        return { type: "CHANGE_AMBIANCE", ambiance: effectiveAmbiance, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -131,14 +273,14 @@ export function validateOraDecision(raw: unknown): OraDecision {
     }
 
     case "SHOW_SPACE_AND_AMBIANCE": {
-      if (validSpace && validAmbiance) {
-        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      if (effectiveSpace && effectiveAmbiance) {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: effectiveSpace, ambiance: effectiveAmbiance, response };
       }
-      if (validSpace) {
-        return { type: "SHOW_SPACE", spaceId: validSpace, response };
+      if (effectiveSpace) {
+        return { type: "SHOW_SPACE", spaceId: effectiveSpace, response };
       }
-      if (validAmbiance) {
-        return { type: "CHANGE_AMBIANCE", ambiance: validAmbiance, response };
+      if (effectiveAmbiance) {
+        return { type: "CHANGE_AMBIANCE", ambiance: effectiveAmbiance, response };
       }
       return {
         type: "PROPERTY_ANSWER",
@@ -164,11 +306,11 @@ export function validateOraDecision(raw: unknown): OraDecision {
 
     case "PROPERTY_ANSWER":
     default: {
-      if (validSpace && validAmbiance && validAmbiance !== "day") {
-        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: validSpace, ambiance: validAmbiance, response };
+      if (effectiveSpace && effectiveAmbiance && effectiveAmbiance !== "day") {
+        return { type: "SHOW_SPACE_AND_AMBIANCE", spaceId: effectiveSpace, ambiance: effectiveAmbiance, response };
       }
-      if (validSpace) {
-        return { type: "SHOW_SPACE", spaceId: validSpace, response };
+      if (effectiveSpace) {
+        return { type: "SHOW_SPACE", spaceId: effectiveSpace, response };
       }
       return { type: "PROPERTY_ANSWER", response };
     }
@@ -324,7 +466,7 @@ export async function callOllamaStructuredLlm(
       const rawText = res.body.message?.content;
       if (rawText && typeof rawText === "string") {
         const parsed = extractJsonFromLlmResponse(rawText);
-        return validateOraDecision(parsed);
+        return validateOraDecision(parsed, input);
       }
     }
 
@@ -479,7 +621,7 @@ export async function callOpenRouterStructuredLlm(
 
       if (rawText && typeof rawText === "string") {
         const parsed = extractJsonFromLlmResponse(rawText);
-        return validateOraDecision(parsed);
+        return validateOraDecision(parsed, input);
       }
     }
 
@@ -913,7 +1055,16 @@ export function evaluateSemanticDecision(
     detectedSpace = "kitchen";
   } else if (norm.includes("exterior") || norm.includes("outside") || norm.includes("facade") || norm.includes("approach")) {
     detectedSpace = "exterior";
-  } else if (norm.includes("entrance") || norm.includes("entry") || norm.includes("front door") || norm.includes("canopy")) {
+  } else if (
+    norm.includes("entrance") ||
+    norm.includes("entry") ||
+    norm.includes("front door") ||
+    norm.includes("canopy") ||
+    norm.includes("inside") ||
+    norm.includes("take me inside") ||
+    norm.includes("step inside") ||
+    norm.includes("go inside")
+  ) {
     detectedSpace = "entrance";
   } else if (norm.includes("hallway") || norm.includes("gallery") || norm.includes("corridor")) {
     detectedSpace = "hallway";
