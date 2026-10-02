@@ -103,6 +103,10 @@ export type OraDecision = (
       type: "OUT_OF_SCOPE";
       response: string;
     }
+  | {
+      type: "START_TOUR";
+      response: string;
+    }
 ) & {
   engineMode?: OraEngineMode;
   fallback?: boolean;

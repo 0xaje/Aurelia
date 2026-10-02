@@ -140,6 +140,10 @@ export class ConversationalOraProvider implements OraProvider {
         ambianceAction = { type: "SHOW_AMBIANCE" as const, ambiance: decision.ambiance };
         break;
 
+      case "START_TOUR":
+        action = { type: "START_TOUR" as const };
+        break;
+
       case "GREETING":
       case "PROPERTY_ANSWER":
       case "CLARIFICATION":
@@ -157,7 +161,15 @@ export class ConversationalOraProvider implements OraProvider {
     // Construct backward-compatible OraInterpretation
     let interpretation: OraInterpretation;
 
-    if (decision.type === "SHOW_SPACE") {
+    if (decision.type === "START_TOUR") {
+      interpretation = {
+        type: "NAVIGATE_SPACE",
+        spaceId: "exterior",
+        confidence: 1.0,
+        action: action!,
+        spokenResponse: decision.response
+      };
+    } else if (decision.type === "SHOW_SPACE") {
       interpretation = {
         type: "NAVIGATE_SPACE",
         spaceId: decision.spaceId,

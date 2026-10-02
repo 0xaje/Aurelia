@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { SpatialAction } from "../../domain/spatial";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { SpatialAction, SpaceId } from "../../domain/spatial";
 import {
   OraState,
   OraSessionContext,
@@ -56,7 +56,6 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
   const [oraState, setOraState] = useState<OraState>("idle");
   const [inputValue, setInputValue] = useState<string>("");
   const [whisperText, setWhisperText] = useState<string | null>(null);
-  const [isWhisperFading, setIsWhisperFading] = useState<boolean>(false);
 
   // Notify state changes to subscribers (e.g. OraAtmosphereCoordinator)
   useEffect(() => {
@@ -71,6 +70,8 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
   const hasSpokenWelcomeRef = useRef<boolean>(false);
   const hasUserInteractedRef = useRef<boolean>(false);
   const isContinuousActiveRef = useRef<boolean>(true);
+  const isTourActiveRef = useRef<boolean>(false);
+  const tourAbortControllerRef = useRef<AbortController | null>(null);
 
   const clearWhisperTimer = () => {
     if (whisperTimerRef.current) {
@@ -79,9 +80,97 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
     }
   };
 
+  const stopTour = useCallback(() => {
+    if (isTourActiveRef.current) {
+      isTourActiveRef.current = false;
+      tourAbortControllerRef.current?.abort();
+      tourAbortControllerRef.current = null;
+      speechOutput.cancel();
+      setOraState("idle");
+    }
+  }, []);
+
+  const TOUR_STOPS: Array<{ spaceId: SpaceId; narration: string }> = useMemo(
+    () => [
+      {
+        spaceId: "exterior",
+        narration: "Welcome to Aurelia Sanctuary. Let us explore the estate from the arrival runway."
+      },
+      {
+        spaceId: "entrance",
+        narration: "Step inside past the cedar canopy and reflection water channel."
+      },
+      {
+        spaceId: "living_room",
+        narration: "Here is the sunken living lounge with panoramic canyon views."
+      },
+      {
+        spaceId: "kitchen",
+        narration: "Next, the gourmet kitchen and Calacatta marble dining island."
+      },
+      {
+        spaceId: "hallway",
+        narration: "The central gallery corridor leads to the secluded private wing."
+      },
+      {
+        spaceId: "master_bedroom",
+        narration: "The master bedroom suite opens to panoramic mountain dawns."
+      },
+      {
+        spaceId: "ensuite_bathroom",
+        narration: "The primary ensuite features a stone soaking tub framing a private cactus courtyard."
+      },
+      {
+        spaceId: "infinity_pool",
+        narration: "And finally, the cantilevered infinity pool with 270-degree sunset vistas."
+      }
+    ],
+    []
+  );
+
+  const startGrandTour = useCallback(async () => {
+    stopTour();
+    isTourActiveRef.current = true;
+    const controller = new AbortController();
+    tourAbortControllerRef.current = controller;
+    setOraState("responding");
+
+    try {
+      for (let i = 0; i < TOUR_STOPS.length; i++) {
+        if (!isTourActiveRef.current || controller.signal.aborted) break;
+        const stop = TOUR_STOPS[i];
+
+        // 1. Move camera / display to space
+        onSpatialAction({ type: "SHOW_SPACE", spaceId: stop.spaceId });
+
+        // 2. Vocalize narration
+        try {
+          await speechOutput.speak(stop.narration);
+        } catch {
+          // interrupted or speech canceled
+        }
+
+        if (!isTourActiveRef.current || controller.signal.aborted) break;
+
+        // 3. Smooth pause (2.4s) to admire the space before proceeding to next
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 2400);
+          controller.signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            resolve();
+          });
+        });
+      }
+    } finally {
+      if (isTourActiveRef.current) {
+        isTourActiveRef.current = false;
+        setOraState(isContinuousActiveRef.current ? "listening" : "idle");
+      }
+    }
+  }, [TOUR_STOPS, onSpatialAction, stopTour]);
+
   const showWhisper = useCallback((text: string, customDurationMs?: number) => {
     clearWhisperTimer();
-    setIsWhisperFading(false);
     setWhisperText(text);
 
     // 2.0 to 8.0 seconds display duration (transient, concise)
@@ -89,10 +178,8 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
       customDurationMs ?? Math.min(8000, Math.max(2500, text.length * 45));
 
     whisperTimerRef.current = setTimeout(() => {
-      setIsWhisperFading(true);
       whisperTimerRef.current = setTimeout(() => {
         setWhisperText(null);
-        setIsWhisperFading(false);
         setOraState((prev) =>
           prev === "responding" || prev === "clarification" ? (isOpen ? "active" : "idle") : prev
         );
@@ -114,7 +201,8 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
       }
     },
     onSpeechStarted: () => {
-      // Barge-in: Visitor begins speaking -> cancel Ora speech immediately!
+      // Barge-in: Visitor begins speaking -> cancel Ora speech & tour immediately!
+      stopTour();
       if (speechOutput.isSpeaking()) {
         speechOutput.cancel();
         clearWhisperTimer();
@@ -122,7 +210,8 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
       }
     },
     onPartialUtterance: () => {
-      // Barge-in: Visitor begins speaking -> cancel Ora speech immediately!
+      // Barge-in: Visitor begins speaking -> cancel Ora speech & tour immediately!
+      stopTour();
       if (speechOutput.isSpeaking()) {
         speechOutput.cancel();
         clearWhisperTimer();
@@ -137,7 +226,6 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
       // Do not overwrite welcome greeting if cold unprompted mic access was pending gesture
       if (hasUserInteractedRef.current && hasShownWhisperRef.current) {
         setOraState("error");
-        showWhisper("I couldn't access the microphone.");
       } else {
         setOraState("idle");
       }
@@ -159,6 +247,9 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
         };
       }
 
+      // Stop any running tour if visitor submits a new query
+      stopTour();
+
       // Keep microphone active for continuous barge-in: USER SPEECH > ORA SPEECH
       setOraState("processing");
 
@@ -170,6 +261,12 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
           sessionRef.current
         );
 
+        // Check for Grand Tour request
+        if (result.action?.type === "START_TOUR" || (result.decision as any)?.type === "START_TOUR") {
+          startGrandTour();
+          return result;
+        }
+
         // 1. Dispatch environmental ambiance action if present (combined or pure)
         if (result.ambianceAction) {
           onSpatialAction(result.ambianceAction);
@@ -180,8 +277,7 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
           onSpatialAction(result.action);
         }
 
-        // 3. Float transient spoken response near Ora
-        showWhisper(result.spokenResponse);
+        // 3. State transition without displaying reply text on front screen
         const isClarification = result.interpretation.type === "CLARIFICATION_REQUIRED";
         setOraState(isClarification ? "clarification" : "responding");
 
@@ -199,12 +295,11 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
         return result;
       } catch (err) {
         setOraState("error");
-        showWhisper("Unable to process instruction.");
         setOraState(isContinuousActiveRef.current ? "listening" : "idle");
         throw err;
       }
     },
-    [context, onSpatialAction, provider, isOpen, showWhisper]
+    [context, onSpatialAction, provider, isOpen, startGrandTour, stopTour]
   );
 
   /**
@@ -464,17 +559,11 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
       className="ora-presence-container"
       aria-label="Ora Intelligent Sanctuary Presence"
     >
-      {/* Transient Spoken Whisper Banner (Dissolves naturally) */}
-      {(whisperText || (isListening && partialTranscript)) && (
-        <div
-          className={`ora-whisper-bubble ${isWhisperFading && !partialTranscript ? "is-fading" : ""}`}
-          role="status"
-          aria-live="polite"
-        >
-          <span className="ora-whisper-kicker">ORA</span>
-          <p className="ora-whisper-text">
-            {partialTranscript ? `“${partialTranscript}”` : whisperText}
-          </p>
+      {/* Live Voice Transcript (Only shown while visitor is actively speaking into mic) */}
+      {isListening && partialTranscript && (
+        <div className="ora-whisper-bubble" role="status" aria-live="polite">
+          <span className="ora-whisper-kicker">YOU</span>
+          <p className="ora-whisper-text">“{partialTranscript}”</p>
         </div>
       )}
 

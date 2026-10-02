@@ -136,10 +136,39 @@ export function sanitizeOraResponse(response: string, fallbackSpace?: SpaceId | 
 }
 
 /**
+ * Detects requests for the complete, step-by-step architectural tour of the property.
+ */
+export function isTourRequest(input?: string): boolean {
+  if (!input) return false;
+  const norm = input.toLowerCase().replace(/[^a-z0-9_\s]/g, " ").replace(/\s+/g, " ").trim();
+  return (
+    norm.includes("show me everything") ||
+    norm.includes("show everything") ||
+    norm.includes("show me the whole house") ||
+    norm.includes("show me the whole building") ||
+    norm.includes("show me whole house") ||
+    norm.includes("show me all the rooms") ||
+    norm.includes("show me all rooms") ||
+    norm.includes("show all the rooms") ||
+    norm.includes("show all rooms") ||
+    norm.includes("give me a full tour") ||
+    norm.includes("give me the full tour") ||
+    norm.includes("full tour") ||
+    norm.includes("tour everything") ||
+    norm.includes("walk me through everything") ||
+    norm.includes("take me through everything") ||
+    norm === "show everything" ||
+    norm === "grand tour" ||
+    norm === "tour all"
+  );
+}
+
+/**
  * Detects explicit architectural spaces mentioned in visitor utterance.
  */
 export function detectExplicitSpace(input?: string): SpaceId | null {
   if (!input) return null;
+  if (isTourRequest(input)) return null;
   const norm = input.toLowerCase().replace(/[^a-z0-9_\s]/g, " ").replace(/\s+/g, " ").trim();
 
   // If user is inquiring about price or how to book, do not force-navigate
@@ -418,6 +447,14 @@ export function validateOraDecision(
         response: response.length > 0
           ? response
           : "I'm here to help you explore Aurelia and plan your stay. What would you like to know about the sanctuary?"
+      };
+
+    case "START_TOUR":
+      return {
+        type: "START_TOUR",
+        response: response.length > 0
+          ? response
+          : "Of course. Let us tour Aurelia Sanctuary step-by-step."
       };
 
     case "PROPERTY_ANSWER":
@@ -788,6 +825,14 @@ export function resolveDirectNavigationIntent(
   const unsupported = ["garage", "gym", "tennis court", "helipad", "cinema", "theater", "sauna", "wine cellar", "guest room", "kids room"];
   for (const u of unsupported) {
     if (norm.includes(u)) return null;
+  }
+
+  // 0. Grand Tour: "Show me everything" / "Show me the whole house" / "Full tour"
+  if (isTourRequest(input)) {
+    return {
+      type: "START_TOUR",
+      response: "Of course. Let us tour Aurelia Sanctuary step-by-step."
+    };
   }
 
   // 1. Take me back

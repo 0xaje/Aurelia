@@ -76,7 +76,8 @@ export type AmbianceId = "day" | "sunset" | "night";
 export type SpatialAction =
   | { type: "SHOW_SPACE"; spaceId: SpaceId | (string & {}) }
   | { type: "SHOW_AMBIANCE"; ambiance: AmbianceId }
-  | { type: "RETURN_TO_OVERVIEW" };
+  | { type: "RETURN_TO_OVERVIEW" }
+  | { type: "START_TOUR" };
 
 /**
  * Spatial View presentation state representing the current visual mode.
@@ -130,7 +131,7 @@ export function resolveSpaceAction(
   action: SpatialAction,
   property: ShortletProperty = defaultProperty
 ): SpatialResolution {
-  if (action.type === "RETURN_TO_OVERVIEW") {
+  if (action.type === "RETURN_TO_OVERVIEW" || action.type === "START_TOUR") {
     return {
       success: true,
       view: { mode: "overview" }

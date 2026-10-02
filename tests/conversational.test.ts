@@ -295,5 +295,18 @@ describe("Phase 5C.1: Conversational Barge-In & Priority", () => {
       assert.ok(res.response.includes("infinity pool"));
     }
   });
+
+  test("'Show me everything' triggers START_TOUR with step-by-step tour response", async () => {
+    const res = await executeServerOraConversation("Show me everything");
+    assert.equal(res.type, "START_TOUR");
+    assert.ok(res.response.includes("step-by-step") || res.response.includes("tour"));
+  });
+
+  test("'Show me the whole house' and 'Give me a full tour' trigger START_TOUR", async () => {
+    const r1 = await executeServerOraConversation("Show me the whole house");
+    assert.equal(r1.type, "START_TOUR");
+    const r2 = await executeServerOraConversation("Give me a full tour");
+    assert.equal(r2.type, "START_TOUR");
+  });
 });
 

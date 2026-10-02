@@ -133,14 +133,26 @@ export const App: React.FC = () => {
     if (!resolution.success) return;
 
     if (resolution.view.mode === "cinematic") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
       scrollHeroRef.current?.navigateToFrame(resolution.view.frame);
     } else if (resolution.view.mode === "detail") {
-      setActiveDetailSpace(resolution.view.space.id);
-      const el = document.getElementById("sanctuary-details");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
+      const targetSpaceId = resolution.view.space.id;
+      setActiveDetailSpace(targetSpaceId);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const cardEl =
+            document.getElementById(`panel-${targetSpaceId}`) ||
+            document.querySelector(".featured-space-display");
+          if (cardEl) {
+            cardEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            const el = document.getElementById("sanctuary-details");
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 60);
+      });
     } else if (resolution.view.mode === "overview") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
       scrollHeroRef.current?.navigateToFrame(1);
     }
   }, []);
