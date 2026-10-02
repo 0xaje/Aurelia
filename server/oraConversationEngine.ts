@@ -13,7 +13,7 @@ import {
   PropertyContext,
   OraEngineMode
 } from "../src/ora/oraTypes";
-import { ORA_SYSTEM_PROMPT } from "./oraPrompt";
+import { ORA_SYSTEM_PROMPT, ORA_LOCAL_SYSTEM_PROMPT } from "./oraPrompt";
 
 export const VALID_SPACES: readonly SpaceId[] = [
   "exterior",
@@ -33,10 +33,16 @@ export const VALID_AMBIANCES: readonly AmbianceId[] = [
 ] as const;
 
 export const DEFAULT_OPENROUTER_MODEL = "liquid/lfm-2.5-2.6b:free";
+export const DEFAULT_OLLAMA_MODEL = "llama3.2:1b";
+export const DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+
+export type LlmProvider = "ollama" | "openrouter";
 
 export interface EngineExecutionOptions {
+  provider?: LlmProvider;
   apiKey?: string;
   model?: string;
+  baseUrl?: string;
   timeoutMs?: number;
   mode?: OraEngineMode;
 }
@@ -190,6 +196,148 @@ export function getOpenRouterModel(): string {
     return process.env.OPENROUTER_MODEL.trim();
   }
   return DEFAULT_OPENROUTER_MODEL;
+}
+
+/**
+ * Resolves the configured LLM provider ("ollama" | "openrouter").
+ * Defaults to "ollama" for local runs, or "openrouter" if OPENROUTER_API_KEY is configured
+ * and LLM_PROVIDER is explicitly set or no Ollama preference is set.
+ */
+export function getLlmProvider(): LlmProvider {
+  if (typeof process !== "undefined" && process.env?.LLM_PROVIDER) {
+    const p = process.env.LLM_PROVIDER.trim().toLowerCase();
+    if (p === "openrouter") return "openrouter";
+    if (p === "ollama") return "ollama";
+  }
+  if (
+    typeof process !== "undefined" &&
+    process.env?.OPENROUTER_API_KEY &&
+    !process.env.OPENROUTER_API_KEY.includes("your_openrouter_api_key_here")
+  ) {
+    return "openrouter";
+  }
+  return "ollama";
+}
+
+/**
+ * Retrieves the configured Ollama base URL (defaults to http://127.0.0.1:11434).
+ */
+export function getOllamaBaseUrl(): string {
+  if (typeof process !== "undefined" && process.env?.OLLAMA_BASE_URL && process.env.OLLAMA_BASE_URL.trim()) {
+    return process.env.OLLAMA_BASE_URL.trim();
+  }
+  return DEFAULT_OLLAMA_BASE_URL;
+}
+
+/**
+ * Retrieves the configured Ollama model identifier (defaults to llama3.2:1b).
+ */
+export function getOllamaModel(): string {
+  if (typeof process !== "undefined" && process.env?.OLLAMA_MODEL && process.env.OLLAMA_MODEL.trim()) {
+    return process.env.OLLAMA_MODEL.trim();
+  }
+  return DEFAULT_OLLAMA_MODEL;
+}
+
+/**
+ * Builds the standard Ollama chat completions request payload with format: "json".
+ */
+export function buildOllamaPayload(
+  input: string,
+  model: string = getOllamaModel(),
+  session?: OraConversationContext
+): Record<string, unknown> {
+  return {
+    model,
+    messages: [
+      {
+        role: "system",
+        content: ORA_LOCAL_SYSTEM_PROMPT
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          visitorUtterance: input,
+          currentSpace: session?.currentSpace || null,
+          lastSpace: session?.lastSpace || null,
+          currentAmbiance: session?.currentAmbiance || "day",
+          recentTurns: session?.recentTurns?.slice(-6) || []
+        })
+      }
+    ],
+    format: "json",
+    stream: false,
+    options: {
+      temperature: 0.2,
+      num_predict: 150,
+      num_ctx: 2048
+    }
+  };
+}
+
+/**
+ * Dispatches an HTTP POST request to the local Ollama daemon (/api/chat).
+ */
+export async function sendOllamaRequest(
+  payload: Record<string, unknown>,
+  baseUrl: string = getOllamaBaseUrl(),
+  timeoutMs = 30000
+): Promise<{ status: number; body: any }> {
+  const url = `${baseUrl.replace(/\/+$/, "")}/api/chat`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const parsed = await res.json();
+    return { status: res.status, body: parsed };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Calls local Ollama with structured JSON parsing and domain decision validation.
+ */
+export async function callOllamaStructuredLlm(
+  input: string,
+  model: string = getOllamaModel(),
+  baseUrl: string = getOllamaBaseUrl(),
+  _context?: PropertyContext,
+  session?: OraConversationContext,
+  timeoutMs = 30000
+): Promise<OraDecision | null> {
+  const payload = buildOllamaPayload(input, model, session);
+
+  try {
+    const res = await sendOllamaRequest(payload, baseUrl, timeoutMs);
+
+    if (res.status >= 200 && res.status < 300 && res.body && typeof res.body === "object") {
+      const rawText = res.body.message?.content;
+      if (rawText && typeof rawText === "string") {
+        const parsed = extractJsonFromLlmResponse(rawText);
+        return validateOraDecision(parsed);
+      }
+    }
+
+    if (res.status >= 400) {
+      const errMsg = res.body?.error || `HTTP ${res.status}`;
+      console.warn(`[Ora Ollama] Provider returned error: ${errMsg}`);
+    }
+
+    return null;
+  } catch (err: any) {
+    console.warn(`[Ora Ollama] Request failed: ${err?.message || "Unknown error"}`);
+    return null;
+  }
 }
 
 /**
@@ -368,13 +516,49 @@ export async function executeServerOraConversation(
     };
   }
 
-  const apiKey = options.apiKey !== undefined ? options.apiKey : getOpenRouterApiKey();
-  const model = options.model || getOpenRouterModel();
-
-  // Determine mode: default to conversational unless explicitly set to deterministic-dev
-  const mode: OraEngineMode = options.mode || (apiKey ? "conversational" : "conversational");
+  const provider: LlmProvider =
+    options.provider ||
+    (options.apiKey !== undefined ? "openrouter" : getLlmProvider());
+  const mode: OraEngineMode = options.mode || "conversational";
 
   if (mode === "conversational") {
+    if (provider === "ollama") {
+      const model = options.model || getOllamaModel();
+      const baseUrl = options.baseUrl || getOllamaBaseUrl();
+
+      try {
+        const decision = await callOllamaStructuredLlm(
+          trimmed,
+          model,
+          baseUrl,
+          context,
+          session,
+          options.timeoutMs ?? 30000
+        );
+
+        if (decision) {
+          return {
+            ...decision,
+            engineMode: "conversational",
+            fallback: false
+          };
+        }
+      } catch {
+        // Fallthrough to explicit error state
+      }
+
+      return {
+        type: "PROPERTY_ANSWER",
+        response: `Local Ollama service is not responding at ${baseUrl}. Ensure 'ollama serve' is running and model '${model}' is downloaded.`,
+        engineMode: "error",
+        fallback: false
+      };
+    }
+
+    // OpenRouter provider branch
+    const apiKey = options.apiKey !== undefined ? options.apiKey : getOpenRouterApiKey();
+    const model = options.model || getOpenRouterModel();
+
     if (!apiKey) {
       // No silent fallback when conversational mode is expected
       return {

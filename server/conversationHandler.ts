@@ -8,17 +8,38 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { executeServerOraConversation } from "./oraConversationEngine";
+import {
+  executeServerOraConversation,
+  getLlmProvider,
+  getOllamaModel,
+  getOpenRouterModel
+} from "./oraConversationEngine";
 import { PropertyContext } from "../src/ora/oraTypes";
 
 let cachedPropertyContext: PropertyContext | null = null;
 
 function ensureEnvironmentLoaded(): void {
-  if (!process.env.OPENROUTER_API_KEY) {
-    try {
-      const envPath = path.resolve(process.cwd(), ".env");
-      if (fs.existsSync(envPath)) {
-        const content = fs.readFileSync(envPath, "utf-8");
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf-8");
+      
+      const matchProvider = content.match(/^LLM_PROVIDER=(.+)$/m);
+      if (matchProvider && matchProvider[1] && !process.env.LLM_PROVIDER) {
+        process.env.LLM_PROVIDER = matchProvider[1].trim().replace(/^["']|["']$/g, "");
+      }
+
+      const matchOllamaUrl = content.match(/^OLLAMA_BASE_URL=(.+)$/m);
+      if (matchOllamaUrl && matchOllamaUrl[1] && !process.env.OLLAMA_BASE_URL) {
+        process.env.OLLAMA_BASE_URL = matchOllamaUrl[1].trim().replace(/^["']|["']$/g, "");
+      }
+
+      const matchOllamaModel = content.match(/^OLLAMA_MODEL=(.+)$/m);
+      if (matchOllamaModel && matchOllamaModel[1] && !process.env.OLLAMA_MODEL) {
+        process.env.OLLAMA_MODEL = matchOllamaModel[1].trim().replace(/^["']|["']$/g, "");
+      }
+
+      if (!process.env.OPENROUTER_API_KEY) {
         const matchKey = content.match(/^OPENROUTER_API_KEY=(.+)$/m);
         if (matchKey && matchKey[1]) {
           const key = matchKey[1].trim().replace(/^["']|["']$/g, "");
@@ -26,14 +47,15 @@ function ensureEnvironmentLoaded(): void {
             process.env.OPENROUTER_API_KEY = key;
           }
         }
-        const matchModel = content.match(/^OPENROUTER_MODEL=(.+)$/m);
-        if (matchModel && matchModel[1] && !process.env.OPENROUTER_MODEL) {
-          process.env.OPENROUTER_MODEL = matchModel[1].trim().replace(/^["']|["']$/g, "");
-        }
       }
-    } catch {
-      // Ignore
+
+      const matchModel = content.match(/^OPENROUTER_MODEL=(.+)$/m);
+      if (matchModel && matchModel[1] && !process.env.OPENROUTER_MODEL) {
+        process.env.OPENROUTER_MODEL = matchModel[1].trim().replace(/^["']|["']$/g, "");
+      }
     }
+  } catch {
+    // Ignore
   }
 }
 
@@ -130,13 +152,16 @@ export async function handleConversationRequest(
 
       // Expose debug info in development (Section 22)
       const isDev = process.env.NODE_ENV !== "production";
+      const activeProvider = getLlmProvider();
       const debug = isDev
         ? {
             engine: decision.engineMode ? decision.engineMode.toUpperCase() : "CONVERSATIONAL",
             provider: decision.engineMode === "conversational"
-              ? `OpenRouter (${process.env.OPENROUTER_MODEL || "liquid/lfm-2.5-2.6b:free"})`
+              ? (activeProvider === "ollama"
+                  ? `Ollama (${getOllamaModel()})`
+                  : `OpenRouter (${getOpenRouterModel()})`)
               : decision.engineMode === "error"
-              ? "None (API Key missing or connection error)"
+              ? "None (Service unreachable or misconfigured)"
               : "Deterministic Semantic Engine",
             request: "POST /api/ora/converse",
             decision: decision.type,

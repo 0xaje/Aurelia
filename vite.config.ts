@@ -38,6 +38,15 @@ export default defineConfig(({ mode }) => {
   if (env.ASSEMBLYAI_API_KEY) {
     process.env.ASSEMBLYAI_API_KEY = env.ASSEMBLYAI_API_KEY;
   }
+  if (env.LLM_PROVIDER) {
+    process.env.LLM_PROVIDER = env.LLM_PROVIDER;
+  }
+  if (env.OLLAMA_BASE_URL) {
+    process.env.OLLAMA_BASE_URL = env.OLLAMA_BASE_URL;
+  }
+  if (env.OLLAMA_MODEL) {
+    process.env.OLLAMA_MODEL = env.OLLAMA_MODEL;
+  }
   if (env.OPENROUTER_API_KEY) {
     process.env.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
   }
