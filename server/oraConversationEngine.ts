@@ -221,7 +221,7 @@ export function validateOraDecision(raw: unknown, userUtterance?: string): OraDe
   if (isNavigationUtterance && inferredSpace) {
     if (rawType === "GREETING" || rawType === "CLARIFICATION" || rawType === "PROPERTY_ANSWER" || !validSpace) {
       const isGenericResponse =
-        /welcome to aurelia|i'm here to|how can i|currently outside|do you mean/i.test(response);
+        /welcome to aurelia|i'm here to|how can i|currently outside|do you mean|please specify|which space/i.test(response);
       const groundedResponse = isGenericResponse
         ? DEFAULT_SPACE_RESPONSES[inferredSpace]
         : response;
