@@ -58,7 +58,7 @@ export class ConversationalOraProvider implements OraProvider {
     if (isBrowserRuntime && typeof fetch === "function") {
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
+        const timer = setTimeout(() => controller.abort(), 35000);
 
         const res = await fetch(this.endpointUrl, {
           method: "POST",
@@ -82,11 +82,11 @@ export class ConversationalOraProvider implements OraProvider {
           }
         }
       } catch {
-        // Network error contacting server endpoint
+        // Network error or timeout contacting server endpoint
       }
     }
 
-    // 2. Direct semantic engine invocation (tests or offline development only)
+    // 2. Direct semantic engine invocation (tests or offline browser fallback)
     if (!decision) {
       try {
         const { executeServerOraConversation } = await import("../../server/oraConversationEngine");
@@ -94,7 +94,7 @@ export class ConversationalOraProvider implements OraProvider {
           trimmed,
           context,
           conversationContext,
-          { mode: isBrowserRuntime ? "conversational" : "deterministic-dev" }
+          { mode: "deterministic-dev" }
         );
       } catch {
         decision = {
