@@ -17,13 +17,30 @@ import {
   OraInterpretation
 } from "./oraTypes";
 import { defaultPropertyContext } from "./oraPropertyContext";
+import { resolveDirectNavigationIntent, resolveReservationIntent } from "./fastPath";
+import type { OraAction } from "./productAdapter";
 
 const DEFAULT_CONVERSATION_URL = "/api/ora/converse";
+
+export type OraFallbackResolver = (
+  transcript: string,
+  context?: PropertyContext,
+  session?: OraConversationContext
+) => Promise<OraDecision | null> | OraDecision | null;
+
+let globalTestFallbackResolver: OraFallbackResolver | null = null;
+
+export function registerOraTestFallback(resolver: OraFallbackResolver | null): void {
+  globalTestFallbackResolver = resolver;
+}
 
 export class ConversationalOraProvider implements OraProvider {
   public readonly name = "ConversationalOraProvider (Aurelia Intelligence)";
 
-  constructor(private endpointUrl: string = DEFAULT_CONVERSATION_URL) {}
+  constructor(
+    private endpointUrl: string = DEFAULT_CONVERSATION_URL,
+    private fallbackResolver?: OraFallbackResolver
+  ) {}
 
   public async interpret(
     input: string,
@@ -48,13 +65,17 @@ export class ConversationalOraProvider implements OraProvider {
 
     let decision: OraDecision | null = null;
 
-    // 0. Fast-path spatial navigation intent resolution:
-    // Instantly maps directives ("show me the toilet", "show me around", "take me inside", etc.) in <1ms
+    // 0. Fast-path intent resolution:
+    // Instantly maps reservation requests and spatial directives in <1ms
     try {
-      const { resolveDirectNavigationIntent } = await import("../../server/oraConversationEngine");
-      const fastNav = resolveDirectNavigationIntent(trimmed, context, conversationContext);
-      if (fastNav) {
-        decision = fastNav;
+      const reservationDecision = resolveReservationIntent(trimmed);
+      if (reservationDecision) {
+        decision = reservationDecision;
+      } else {
+        const fastNav = resolveDirectNavigationIntent(trimmed, context, conversationContext);
+        if (fastNav) {
+          decision = fastNav;
+        }
       }
     } catch {
       // Continue to network call
@@ -98,17 +119,37 @@ export class ConversationalOraProvider implements OraProvider {
       }
     }
 
-    // 2. Direct semantic engine invocation (tests or offline browser fallback)
+    // 2. Direct fallback resolution (Node.js test execution or graceful offline fallback)
     if (!decision) {
-      try {
-        const { executeServerOraConversation } = await import("../../server/oraConversationEngine");
-        decision = await executeServerOraConversation(
-          trimmed,
-          context,
-          conversationContext,
-          { mode: "deterministic-dev" }
-        );
-      } catch {
+      const resolver = this.fallbackResolver || globalTestFallbackResolver;
+      if (resolver) {
+        try {
+          const fallbackDecision = await resolver(trimmed, context, conversationContext);
+          if (fallbackDecision) {
+            decision = fallbackDecision;
+          }
+        } catch {
+          // Ignore fallback error
+        }
+      }
+
+      // If running in Node.js test environment without an HTTP server
+      if (!decision && typeof window === "undefined") {
+        try {
+          const serverModulePath = "../../server/oraConversationEngine";
+          const { executeServerOraConversation } = await import(/* @vite-ignore */ serverModulePath);
+          decision = await executeServerOraConversation(
+            trimmed,
+            context,
+            conversationContext,
+            { mode: "deterministic-dev" }
+          );
+        } catch {
+          // Ignore
+        }
+      }
+
+      if (!decision) {
         decision = {
           type: "PROPERTY_ANSWER",
           response: "Aurelia Sanctuary offers eight architectural spaces across day, sunset, and night."
@@ -158,6 +199,19 @@ export class ConversationalOraProvider implements OraProvider {
     if (ambianceAction) actions.push(ambianceAction);
     if (action) actions.push(action);
 
+    let transactionAction: OraAction | undefined = undefined;
+    if (decision.type === "INITIATE_TRANSACTION") {
+      transactionAction = {
+        type: "INITIATE_TRANSACTION",
+        payload: {
+          transactionType: decision.transactionType,
+          guestName: decision.guestName,
+          checkIn: decision.checkIn,
+          checkOut: decision.checkOut
+        }
+      };
+    }
+
     // Construct backward-compatible OraInterpretation
     let interpretation: OraInterpretation;
 
@@ -167,6 +221,12 @@ export class ConversationalOraProvider implements OraProvider {
         spaceId: "exterior",
         confidence: 1.0,
         action: action!,
+        spokenResponse: decision.response
+      };
+    } else if (decision.type === "INITIATE_TRANSACTION") {
+      interpretation = {
+        type: "GENERAL_INQUIRY",
+        topic: "RESERVATION_REQUEST",
         spokenResponse: decision.response
       };
     } else if (decision.type === "SHOW_SPACE") {
@@ -215,6 +275,7 @@ export class ConversationalOraProvider implements OraProvider {
       action,
       ambianceAction,
       actions: actions.length > 0 ? actions : undefined,
+      transactionAction,
       spokenResponse: decision.response
     };
   }

@@ -1,4 +1,5 @@
 import { SpaceId, SpatialAction, SpatialResolution, AmbianceId } from "../domain/spatial";
+import type { OraAction } from "./productAdapter";
 
 export type OraState =
   | "idle"
@@ -107,6 +108,14 @@ export type OraDecision = (
       type: "START_TOUR";
       response: string;
     }
+  | {
+      type: "INITIATE_TRANSACTION";
+      transactionType: "RESERVATION" | string;
+      guestName?: string;
+      checkIn?: string;
+      checkOut?: string;
+      response: string;
+    }
 ) & {
   engineMode?: OraEngineMode;
   fallback?: boolean;
@@ -171,6 +180,7 @@ export interface OraResult {
   actions?: SpatialAction[];
   spokenResponse: string;
   resolution?: SpatialResolution;
+  transactionAction?: OraAction;
 }
 
 export interface OraProvider {

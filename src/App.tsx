@@ -7,6 +7,9 @@ import { SpaceId, SpatialAction, resolveSpaceAction, defaultProperty } from "./d
 import { aureliaAtmosphere, AureliaAtmosphere } from "./audio/AureliaAtmosphere";
 import { OraAtmosphereCoordinator } from "./audio/OraAtmosphereCoordinator";
 import { OraState } from "./ora/oraTypes";
+import { ReservationPass } from "./components/ReservationPass/ReservationPass";
+import { reservationStore } from "./domain/reservationStore";
+import { ReservationRequest } from "./domain/reservationTypes";
 import "./styles/tokens.css";
 
 declare global {
@@ -19,7 +22,15 @@ declare global {
 export const App: React.FC = () => {
   const scrollHeroRef = useRef<ScrollHeroHandle>(null);
   const [activeDetailSpace, setActiveDetailSpace] = useState<SpaceId>("master_bedroom");
+  const [activeReservation, setActiveReservation] = useState<ReservationRequest | null>(() => reservationStore.getLatest());
   const coordinatorRef = useRef<OraAtmosphereCoordinator | null>(null);
+
+  // Subscribe to session reservation store updates
+  useEffect(() => {
+    return reservationStore.subscribe(() => {
+      setActiveReservation(reservationStore.getLatest());
+    });
+  }, []);
 
   if (!coordinatorRef.current) {
     coordinatorRef.current = new OraAtmosphereCoordinator(aureliaAtmosphere);
@@ -209,6 +220,14 @@ export const App: React.FC = () => {
           onCancelNavigation={handleCancelNavigation}
           getCurrentFrame={() => scrollHeroRef.current?.getCurrentFrame() ?? 1}
           isNavigating={() => scrollHeroRef.current?.isNavigating() ?? false}
+        />
+      )}
+
+      {/* Luxury Shortlet Reservation Pass (Phase 3) */}
+      {activeReservation && (
+        <ReservationPass
+          reservation={activeReservation}
+          onClose={() => setActiveReservation(null)}
         />
       )}
     </main>

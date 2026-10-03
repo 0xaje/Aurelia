@@ -11,6 +11,7 @@ import { defaultPropertyContext } from "../../ora/oraPropertyContext";
 import { defaultOraProvider, executeOraRequest } from "../../ora/oraProvider";
 import { useVoiceSession } from "../../voice/useVoiceSession";
 import { speechOutput } from "../../voice/speechOutput";
+import { aureliaProductAdapter } from "../../ora/aureliaAdapter";
 import "../../styles/oraPresence.css";
 
 const WELCOME_GREETING =
@@ -275,6 +276,15 @@ export const OraPresence: React.FC<OraPresenceProps> = ({
         // 2. Dispatch spatial action if present
         if (result.action) {
           onSpatialAction(result.action);
+        }
+
+        // 2.5 Dispatch transaction action to ProductAdapter if present
+        if (result.transactionAction) {
+          try {
+            await aureliaProductAdapter.executeAction(result.transactionAction);
+          } catch {
+            // Safe execution
+          }
         }
 
         // 3. State transition without displaying reply text on front screen

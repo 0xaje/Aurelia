@@ -1,7 +1,10 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { executeOraRequest } from "../src/ora/oraProvider.ts";
-import { ConversationalOraProvider } from "../src/ora/conversationalOraProvider.ts";
+import {
+  ConversationalOraProvider,
+  registerOraTestFallback
+} from "../src/ora/conversationalOraProvider.ts";
 import { defaultPropertyContext } from "../src/ora/oraPropertyContext.ts";
 import { OraSessionContext } from "../src/ora/oraTypes.ts";
 import {
@@ -9,6 +12,10 @@ import {
   validateOraDecision,
   executeServerOraConversation
 } from "../server/oraConversationEngine.ts";
+
+registerOraTestFallback((transcript, context, session) =>
+  executeServerOraConversation(transcript, context, session, { mode: "deterministic-dev" })
+);
 
 describe("Phase 5C: Natural Language Understanding & Semantic Equivalence", () => {
   const provider = new ConversationalOraProvider();

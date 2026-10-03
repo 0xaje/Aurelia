@@ -3,49 +3,99 @@ doc: scope
 status: approved
 ---
 
-# AURELIA
+# ORA (with AURELIA Luxury Shortlet Reference Environment)
 
-A conversational hotel interface where the hotel website becomes the visual body of the AI conversation.
+**Ora lets products become conversationally controllable.**
 
-## The Unique Kernel
-Instead of an AI chatbot floating in a corner widget or a blind voice assistant, the application viewport dynamically shifts its visual focus, ambient environment, and room state in real-time response to the guest's natural spoken conversation, closing the loop with a deterministic booking record and digital key transition.
+ORA is a reusable conversational intelligence and action layer that allows high-value visual products to be explored, controlled, and transacted through natural voice and direct manipulation.
 
-## Who It's For
-A traveler or guest (e.g. planning an anniversary or retreat) who knows what they want in natural human terms ("quiet with a balcony, around ₦150k") rather than navigating complex filter dropdowns, date pickers, and disconnected modal popups.
+**AURELIA** is the current reference implementation: a luxury architectural shortlet / private residence ("Aurelia Sanctuary") through which ORA demonstrates spatial control, environmental immersion, and verified transaction initiation.
 
-## The Core Loop
-1. **SPEAK**: The guest speaks natural preferences, questions, or instructions into the microphone.
-2. **UNDERSTAND**: The AI parses conversational intent, resolves ambiguity, and triggers deterministic tool calls.
-3. **EXPLORE**: The hotel viewport visibly responds: smooth camera/focus transitions bring the matching room into view, reveals requested amenities (e.g. bathtub, balcony), or adjusts scene ambience (e.g. evening view).
-4. **DECIDE**: The guest verifies the room details through conversational Q&A grounded exclusively in factual hotel data.
-5. **BOOK**: The guest states "Book it", prompting a single confirmation and creating an immutable backend booking record.
-6. **KEY**: The interface transitions into an access/confirmed state, rendering an active digital booking pass / room key.
+---
 
-## Inspiration & Identity
-- **Mood & Tone**: Modern luxury boutique hotel — warm dark obsidian tones, warm gold/bronze accents, architectural typography, glassmorphism, seamless layout transitions.
-- **Motion Principle**: Motion communicates application state, not decorative distraction. Shifting focus, spotlighting amenities, crossfading lighting from day to dusk/night, and morphing the room card into a digital access credential.
-- **References**: High-end boutique hospitality portfolios (e.g. Aman, Edition) paired with dynamic spatial interfaces.
+## 1. The Unique Kernel
 
-## Why This Matters to the Learner
-To break out of the standard "chatbot wrapper" pattern and prove a native conversational architecture where voice dialogue directly drives reactive application state, deterministic business logic, and visual immersion.
+Instead of a floating text chatbot in a corner widget or a blind voice assistant with no visual grounding, ORA **embodies the product surface**. The application viewport, camera angle, visual focus, lighting ambiance, and soundscape dynamically respond in real time to natural spoken dialogue, closing the loop with a verified reservation request and mobile WhatsApp handoff.
 
-## What "Working" Looks Like
-A live, interactive web application where a user can press-to-talk (or speak via live audio stream), state a multi-faceted room preference in Nigerian Naira (₦), watch the screen smoothly orient to the matching suite, ask a visual amenity question ("What does it look like at night?" or "Does it have a bathtub?"), confirm the reservation with "Book it", and watch the viewport morph into a confirmed stay pass with an issued Booking ID and digital room key — with zero hallucinated inventory or pricing.
+---
 
-## The POC Boundary
-- **In Scope**:
-  - Single fictional property: "Aurelia Hotel".
-  - Exactly 3 distinct, curated rooms (Deluxe Room @ ₦85,000, Executive Suite @ ₦145,000, Presidential Suite @ ₦280,000).
-  - Explicit deterministic room inventory schema (amenities, high-res curated imagery, daylight/night variants, exact pricing).
-  - Constrained frontend state machine driven by structured tool events (`show_room`, `show_amenity`, `change_scene`, `create_booking`, `show_key`).
-  - Voice input pipeline (AssemblyAI Voice Agent or Realtime STT + LLM tool loop) with text fallback for testing and grading reliability.
-  - In-memory deterministic booking store and digital key issuance.
-- **Later**:
-  - Multi-property search, custom date range pricing multipliers, real PMS integration, user accounts, SMS/WhatsApp confirmation dispatch.
+## 2. Who It's For
 
-## Explicitly Cut
-- **Payment Gateway (Stripe/Paystack)**: Adds webhook complexity, credential overhead, and drop-off risk without proving the conversational UI thesis.
-- **Arbitrary DOM/Agent Browser Control**: Replaced with a strictly typed event/action bus to ensure deterministic, snappy, bulletproof UI transitions.
-- **Multi-Agent Architectures**: Adds non-deterministic orchestration latency and debugging fragility to an MVP that needs instantaneous sub-second visual responses.
-- **Ancillary Booking (Spa, Dining, Airport Transfer)**: Distracts from the primary guest room booking and key issuance loop.
-- **Phone / Twilio Call In**: Keeps the focus on the synchronized visual viewport on the web screen.
+* **The Guest / Buyer:** An experiential client (e.g. planning a private retreat or luxury shortlet stay) who discovers and decides through natural human conversation ("show me the infinity pool at sunset", "give me a full tour", "reserve Aurelia for John from October 9th to October 11th") rather than clicking complex filter dropdowns, thumbnail carousels, and forms.
+* **The Business:** Luxury shortlets, private estates, high-end real estate, automotive showrooms, and bespoke retail seeking an autonomous spatial sales agent that guides customers and delivers qualified, itemized transaction handoffs.
+
+---
+
+## 3. The Core Product Distinction
+
+### ORA (The Reusable Product Layer)
+* Continuous hands-free voice input and streaming STT (AssemblyAI v3).
+* Serene concierge vocalization and instant sub-second barge-in (interruption).
+* Multi-turn conversational reasoning, context memory, and fast-path intent routing (<1ms).
+* Domain-agnostic Action Bus dispatching typed envelopes (`NAVIGATE`, `SET_AMBIANCE`, `START_TOUR`, `INITIATE_TRANSACTION`, `DISPATCH_HANDOFF`).
+* Audio ducking coordinator (quieting background soundscapes during speech turns).
+* Structured transaction intent extractor (identifying guest name and stay dates).
+
+### AURELIA (The Reference Implementation)
+* A private modernist desert shortlet residence ("Aurelia Sanctuary") with 8 architectural spaces.
+* 300-frame photographic canvas scrubber with programmatic camera timeline tweening.
+* 3 authentic lighting and ambiance passes (`day`, `sunset`, `night`).
+* Spatial discovery panels for detail sanctuaries (Master Bedroom, Ensuite Spa, Infinity Pool).
+* Authoritative domain pricing model ($1,850/night shortlet buyout rate).
+* Session reservation store and glassmorphic Reservation Pass UI.
+
+---
+
+## 4. The Core Customer Journey
+
+$$\text{SPEAK} \longrightarrow \text{UNDERSTAND} \longrightarrow \text{EXPLORE} \longrightarrow \text{DECIDE} \longrightarrow \text{RESERVE} \longrightarrow \text{HANDOFF}$$
+
+1. **SPEAK:** The guest speaks naturally into the continuous microphone stream.
+2. **UNDERSTAND:** ORA transcribes audio in real time, maintains multi-turn context, and parses spatial/transactional intent.
+3. **EXPLORE:** The Product Adapter directs the viewport: the 300-frame canvas smoothly navigates to the target space, detail cards center into view, or the ambiance crossfades.
+4. **DECIDE:** The guest examines features and asks questions, supported by an autonomous guided Grand Tour and instant barge-in.
+5. **RESERVE (Phase 3 Completed):** The guest states *"Ora, I’d like to reserve AURELIA for John from October 9th to October 11th"*. ORA extracts guest name and dates, calculates 2 nights, computes $3,700 total, generates a verified reference (`AUR-YYYY-XXXX`), and presents the digital Reservation Pass in `READY_FOR_HANDOFF` status.
+6. **HANDOFF (Phase 4 Completed):** The guest clicks **"Continue on WhatsApp"**, opening a genuine prefilled `https://wa.me/?text=...` browser deep link delivering the reservation request to mobile messaging, transitioning the state to `HANDOFF_OPENED`.
+
+---
+
+## 5. Reservation Architecture & State Lifecycle
+
+```text
+DRAFT
+  ↓ (Guest name + valid stay dates provided)
+READY_FOR_HANDOFF
+  ↓ (User clicks "Continue on WhatsApp")
+HANDOFF_OPENED
+```
+
+* **`DRAFT`:** Reservation intent expressed, but required fields (guest name or calendar dates) are pending.
+* **`READY_FOR_HANDOFF`:** Application has validated stay dates, calculated nights and total stay price, generated an authentic `AUR-YYYY-XXXX` reference, and displayed the Reservation Pass with the "Continue on WhatsApp" action.
+* **`HANDOFF_OPENED`:** The user has clicked the external messaging handoff link.
+
+**Truthful Boundary:** ORA prepares a verified **Reservation Request**. It does not pretend to be a confirmed hotel booking or instant card charge.
+
+---
+
+## 6. Proof-of-Concept Boundary
+
+### Currently Implemented & Verified:
+* **8 Architectural Spaces:** `exterior`, `entrance`, `living_room`, `kitchen`, `hallway`, `master_bedroom`, `ensuite_bathroom`, `infinity_pool`.
+* **300-Frame Canvas Engine:** Hardware-accelerated 2D canvas scrubber with 900 physical JPEG frames across `day`, `sunset`, and `night`.
+* **Acoustic Atmosphere:** Real-time WebAudio soundscape with automated volume ducking during speech turns.
+* **Continuous Hands-Free Voice:** AssemblyAI v3 streaming WebSocket with ephemeral token minting.
+* **Instant Barge-In:** Immediate speech synthesis and tour cancellation when the guest speaks.
+* **ProductAdapter Boundary:** Formal TypeScript contract decoupling ORA Core from Aurelia's visual and spatial implementation.
+* **Real Shortlet Reservation Flow (Phase 3):** Deterministic date calculation, pricing engine ($1,850/night × nights), dynamic reference generation (`AUR-YYYY-XXXX`), session persistence (`sessionStorage`), and glassmorphic Reservation Pass UI.
+* **WhatsApp Deep Link Handoff (Phase 4):** Verified client-side WhatsApp browser deep link handoff (`https://wa.me/?text=...`) on the Reservation Pass via "Continue on WhatsApp", transitioning status to `HANDOFF_OPENED`.
+
+### Planned Next Implementation:
+* **Phase 5:** Dead code pruning and final submission assets.
+
+### Explicitly Excluded (Out of Scope):
+* **Live Credit Card Payment Gateways (Stripe/Paystack):** Webhook latency and live card handling distract from the conversational UI thesis.
+* **External WhatsApp Business Cloud API / Twilio:** Adds backend server complexity without improving the customer handoff proof; browser `wa.me` deep link truthfully delivers the reservation request.
+* **Production SQL / Postgres Infrastructure:** Single-property proof of concept uses in-memory session persistence backed by `sessionStorage`.
+* **Hotel Inventory / Room Booking Systems:** Aurelia is a private residence shortlet estate, not a hotel with individual room allocation.
+* **Live Availability Engines:** Calendar availability is represented truthfully for demo dates without mocking external PMS integration.
+* **User Accounts / Passwords:** Session-level guest identification is sufficient.

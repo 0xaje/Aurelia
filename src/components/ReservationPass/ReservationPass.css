@@ -1,0 +1,352 @@
+/**
+ * AURELIA — Reservation Pass Luxury Glassmorphic Styles
+ */
+
+.reservation-pass-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9985;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: passFadeIn 350ms var(--ease-spring) forwards;
+}
+
+.reservation-pass-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 5, 7, 0.25);
+  cursor: pointer;
+}
+
+.reservation-pass-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(
+    145deg,
+    rgba(22, 25, 30, 0.90) 0%,
+    rgba(12, 14, 18, 0.94) 100%
+  );
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(212, 175, 55, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2.25rem 2rem;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: passSlideIn 350ms var(--ease-spring) forwards;
+  pointer-events: auto;
+  cursor: default;
+}
+
+@keyframes passFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes passSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reservation-pass-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.reservation-pass-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+  transform: rotate(90deg);
+}
+
+/* Header */
+.pass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-right: 2rem;
+}
+
+.pass-brand-mark {
+  display: flex;
+  flex-direction: column;
+}
+
+.pass-brand-name {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.pass-brand-subtitle {
+  font-size: 0.65rem;
+  letter-spacing: 0.32em;
+  color: var(--color-bronze-accent);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.pass-document-type {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.pass-type-badge {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.pass-status-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.status-ready {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--color-bronze-accent);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.status-opened {
+  background: rgba(37, 211, 102, 0.15);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.45);
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.12);
+}
+
+.status-draft {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Divider Gold Thread */
+.pass-thread-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0.5) 0%,
+    rgba(212, 175, 55, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  width: 100%;
+}
+
+/* Body */
+.pass-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pass-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.pass-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.field-value {
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.reference-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--color-bronze-accent);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.rate-unit {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+
+/* Total Box */
+.pass-total-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.total-label-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.total-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+}
+
+.total-note {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+.total-amount {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--color-bronze-accent);
+  letter-spacing: 0.04em;
+}
+
+.currency-tag {
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Actions: WhatsApp Handoff CTA */
+.pass-actions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+}
+
+.pass-whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.22) 0%,
+    rgba(212, 175, 55, 0.12) 50%,
+    rgba(18, 20, 24, 0.8) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.pass-whatsapp-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.32) 0%,
+    rgba(212, 175, 55, 0.2) 50%,
+    rgba(24, 28, 34, 0.9) 100%
+  );
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow:
+    0 6px 24px rgba(212, 175, 55, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.pass-whatsapp-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.pass-whatsapp-btn:focus-visible {
+  outline: 2px solid var(--color-bronze-accent);
+  outline-offset: 3px;
+}
+
+.whatsapp-icon {
+  width: 20px;
+  height: 20px;
+  color: #25d366;
+  flex-shrink: 0;
+  transition: transform 250ms ease;
+}
+
+.pass-whatsapp-btn:hover .whatsapp-icon {
+  transform: scale(1.08);
+}
+
+/* Footer */
+.pass-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.9rem;
+}
+
+.pass-truth-disclaimer {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  text-align: center;
+  font-style: italic;
+}

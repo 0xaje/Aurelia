@@ -11,10 +11,17 @@ import {
   sendOpenRouterRequest
 } from "../server/oraConversationEngine.ts";
 import { executeOraRequest } from "../src/ora/oraProvider.ts";
-import { ConversationalOraProvider } from "../src/ora/conversationalOraProvider.ts";
+import {
+  ConversationalOraProvider,
+  registerOraTestFallback
+} from "../src/ora/conversationalOraProvider.ts";
 import { defaultPropertyContext } from "../src/ora/oraPropertyContext.ts";
 import { OraSessionContext } from "../src/ora/oraTypes.ts";
 import { speechOutput } from "../src/voice/speechOutput.ts";
+
+registerOraTestFallback((transcript, context, session) =>
+  executeServerOraConversation(transcript, context, session, { mode: "deterministic-dev" })
+);
 
 describe("OpenRouter Provider & Configuration", () => {
   test("request payload is properly constructed with system prompt and JSON schema instructions", () => {
